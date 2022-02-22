@@ -1,0 +1,32 @@
+{
+  "name": "@mhlabs/cfn-diagram",
+  "version": "1.1.33",
+  "description": "CLI tool to visualise CloudFormation, SAM or CDK stacks as draw.io, visjs networks or ascii-art",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "aws",
+    "dynamodb",
+    "v3",
+    "documentclient"
+  ],
+  "author": "mhlabs",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^27.3.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhlabs/dynamodb-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mhlabs/dynamodb-client/issues"
+  },
+  "homepage": "https://github.com/mhlabs/dynamodb-client#readme"
+}
