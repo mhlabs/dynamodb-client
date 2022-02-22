@@ -1,5 +1,13 @@
-const scan = require('./dynamodb/scan');
+const { DynamoDB } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
 
-module.exports = {
-  scan
+const getItem = require('./dynamodb/get-item');
+
+const client = new DynamoDB({});
+const documentClient = DynamoDBDocument.from(client);
+
+const dynamoClient = {
+  getItem: (tableName, key) => getItem(documentClient, tableName, key)
 };
+
+module.exports = dynamoClient;
