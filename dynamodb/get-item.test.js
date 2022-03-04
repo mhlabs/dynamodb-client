@@ -5,6 +5,10 @@ const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
 const getItem = require('./get-item');
 
+beforeEach(() => {
+  dynamoDbDocumentMock.reset();
+});
+
 describe('get-item', () => {
   it('should validate table', async () => {
     await expect(getItem(dynamoDbDocumentMock, '', {})).rejects.toThrow(
@@ -36,5 +40,24 @@ describe('get-item', () => {
 
     const result = await getItem(dynamoDbDocumentMock, 'table', {});
     expect(result).toBeNull();
+  });
+
+  it('should use arguments and extra options', async () => {
+    const table = 'table';
+    const key = { Id: 5 };
+    const options = {
+      AttributesToGet: ['x', 'z'],
+      ConsistentRead: true
+    };
+
+    await getItem(dynamoDbDocumentMock, table, key, options);
+
+    const appliedArguments =
+      dynamoDbDocumentMock.commandCalls(GetCommand)[0].args[0].input;
+
+    expect(appliedArguments.TableName).toBe(table);
+    expect(appliedArguments.Key).toBe(key);
+    expect(appliedArguments.AttributesToGet).toBe(options.AttributesToGet);
+    expect(appliedArguments.ConsistentRead).toBe(options.ConsistentRead);
   });
 });
