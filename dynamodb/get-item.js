@@ -1,6 +1,6 @@
 const { GetCommand } = require('@aws-sdk/lib-dynamodb');
 
-async function getItem(documentClient, tableName, key, options) {
+async function getItem(documentClient, tableName, key, options = undefined) {
   if (!tableName) throw new Error('Table name is required.');
   if (!key) throw new Error('Key is required.');
   if (typeof key !== 'object') throw new Error('Key should be an object.');

@@ -10,7 +10,7 @@ function createDynamoClient(documentClient) {
   };
 }
 
-function init(dynamoDbClientConfig, translateConfig) {
+function init(dynamoDbClientConfig = undefined, translateConfig = undefined) {
   const client = new DynamoDB(dynamoDbClientConfig);
   const documentClient = DynamoDBDocument.from(client, translateConfig);
 
