@@ -3,11 +3,22 @@ const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
 
 const getItem = require('./dynamodb/get-item');
 
-const client = new DynamoDB({});
-const documentClient = DynamoDBDocument.from(client);
+function createDynamoClient(documentClient) {
+  return {
+    getItem: (tableName, key, options) =>
+      getItem(documentClient, tableName, key, options)
+  };
+}
+
+function init(dynamoDbClientConfig, translateConfig) {
+  const client = new DynamoDB(dynamoDbClientConfig);
+  const documentClient = DynamoDBDocument.from(client, translateConfig);
+
+  return createDynamoClient(documentClient);
+}
 
 const dynamoClient = {
-  getItem: (tableName, key) => getItem(documentClient, tableName, key)
+  init
 };
 
 module.exports = dynamoClient;
