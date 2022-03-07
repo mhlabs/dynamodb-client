@@ -6,7 +6,7 @@ const {
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-const { batchWrite, MAX_ITEMS_PER_BATCH } = require('./batch-write');
+const batchWrite = require('./batch-write');
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
@@ -24,10 +24,10 @@ describe('batchWrite', () => {
     const commandCalls = dynamoDbDocumentMock.commandCalls(BatchWriteCommand);
 
     expect(commandCalls[0].args[0].input.RequestItems.testTable).toHaveLength(
-      MAX_ITEMS_PER_BATCH
+      25
     );
     expect(commandCalls[1].args[0].input.RequestItems.testTable).toHaveLength(
-      MAX_ITEMS_PER_BATCH
+      25
     );
     expect(commandCalls[2].args[0].input.RequestItems.testTable).toHaveLength(
       10
