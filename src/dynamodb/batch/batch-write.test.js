@@ -1,116 +1,30 @@
-const { mockClient } = require('aws-sdk-client-mock');
-const {
-  BatchWriteCommand,
-  DynamoDBDocument
-} = require('@aws-sdk/lib-dynamodb');
+jest.mock('./execute');
 
-const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
-
-const batchWrite = require('./batch-write');
+const execute = require('./execute');
+const tested = require('./batch-write');
 const constants = require('./constants');
 
 beforeEach(() => {
-  dynamoDbDocumentMock.reset();
+  jest.resetAllMocks();
+  jest.restoreAllMocks();
 });
 
 describe('batchWrite', () => {
   it('should split items into chunks of max batch size (batchWrite limit)', async () => {
     const items = Array(constants.MAX_ITEMS_PER_BATCH * 2 + 10).fill({ id: 1 });
-    const res = await batchWrite(dynamoDbDocumentMock, 'testTable', items);
+    const res = await tested(null, 'testTable', items);
 
-    expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
-      3
-    );
+    expect(execute).toHaveBeenCalledTimes(3);
 
-    const commandCalls = dynamoDbDocumentMock.commandCalls(BatchWriteCommand);
+    const firstRequest = execute.mock.calls[0][1].input.RequestItems.testTable;
+    expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH);
 
-    expect(commandCalls[0].args[0].input.RequestItems.testTable).toHaveLength(
-      constants.MAX_ITEMS_PER_BATCH
-    );
-    expect(commandCalls[1].args[0].input.RequestItems.testTable).toHaveLength(
-      constants.MAX_ITEMS_PER_BATCH
-    );
-    expect(commandCalls[2].args[0].input.RequestItems.testTable).toHaveLength(
-      10
-    );
+    const secondRequest = execute.mock.calls[1][1].input.RequestItems.testTable;
+    expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH);
+
+    const thirdRequest = execute.mock.calls[2][1].input.RequestItems.testTable;
+    expect(thirdRequest).toHaveLength(10);
+
     expect(res).toBe(true);
-  });
-
-  describe('retry UnprocessedItems', () => {
-    it('should retry once if UnprocessedItems', async () => {
-      const items = [{ id: 1 }];
-      const table = 'testTable';
-
-      dynamoDbDocumentMock
-        .on(BatchWriteCommand, {
-          RequestItems: { [table]: [{ PutRequest: { Item: { id: 1 } } }] }
-        })
-        .resolves({
-          UnprocessedItems: {
-            tableNameNotMatchingMock: [
-              {
-                PutRequest: {
-                  Item: { id: 1 }
-                }
-              }
-            ]
-          }
-        });
-
-      const res = await batchWrite(dynamoDbDocumentMock, table, items, 0, 0);
-
-      expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
-        2
-      );
-      expect(res).toBeTruthy();
-    });
-
-    it('should not retry if no UnprocessedItems', async () => {
-      const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
-
-      dynamoDbDocumentMock.on(BatchWriteCommand).resolves({
-        UnprocessedItems: {}
-      });
-
-      const res = await batchWrite(
-        dynamoDbDocumentMock,
-        'testTable',
-        items,
-        0,
-        0
-      );
-
-      expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
-        1
-      );
-      expect(res).toBeTruthy();
-    });
-
-    it('should throw error after max retries', async () => {
-      const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
-      const table = 'testTable';
-
-      dynamoDbDocumentMock.on(BatchWriteCommand).resolves({
-        UnprocessedItems: {
-          [table]: [
-            {
-              PutRequest: {
-                Item: { id: 1 }
-              }
-            }
-          ]
-        }
-      });
-
-      await expect(
-        batchWrite(dynamoDbDocumentMock, table, items, 0, 0)
-      ).rejects.toThrow(
-        'returned UnprocessedItems after 3 attempts (2 retries)'
-      );
-
-      expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
-        3
-      );
-    });
   });
 });

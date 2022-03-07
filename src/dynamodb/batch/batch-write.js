@@ -1,72 +1,9 @@
 const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
 
 const { chunk } = require('../../array/chunk');
-const { randomInteger } = require('../../randomizer/random-integer');
 const constants = require('./constants');
-
-async function retryUnprocessedItems(
-  documentClient,
-  unprocessedItems,
-  batchNo,
-  retryAttemptNo,
-  retryOptions
-) {
-  if (retryAttemptNo > constants.UNPROCESSED_RETRY_LIMIT) {
-    throw new Error(
-      `BatchWrite batch: ${batchNo} - returned UnprocessedItems after ${retryAttemptNo} attempts (${
-        retryAttemptNo - 1
-      } retries)`
-    );
-  }
-
-  const randomTimeoutToAvoidThrottling = randomInteger(
-    retryOptions.minMs,
-    retryOptions.maxMs
-  );
-
-  console.log(
-    `UnprocessedItems, retrying after waiting ${randomTimeoutToAvoidThrottling} ms, attempt ${retryAttemptNo})...`,
-    unprocessedItems
-  );
-
-  await new Promise((r) => {
-    setTimeout(r, randomTimeoutToAvoidThrottling);
-  });
-
-  const batchWriteCommand = new BatchWriteCommand({
-    RequestItems: unprocessedItems
-  });
-
-  await execAndRetryBatchWrite(
-    documentClient,
-    batchWriteCommand,
-    batchNo,
-    retryAttemptNo,
-    retryOptions
-  );
-}
-
-async function execAndRetryBatchWrite(
-  documentClient,
-  batchWriteCommand,
-  batchNo,
-  retryCount,
-  retryOptions
-) {
-  const res = await documentClient.send(batchWriteCommand);
-
-  if (res?.UnprocessedItems && Object.keys(res?.UnprocessedItems).length > 0) {
-    await retryUnprocessedItems(
-      documentClient,
-      res.UnprocessedItems,
-      batchNo,
-      retryCount + 1,
-      retryOptions
-    );
-  }
-
-  return res;
-}
+const execute = require('./execute');
+const parseRetryOptions = require('./retry-options');
 
 function createBatchWriteCommand(tableName, batch) {
   const putRequests = batch.map((item) => ({
@@ -79,19 +16,6 @@ function createBatchWriteCommand(tableName, batch) {
       [tableName]: putRequests
     }
   });
-}
-
-function parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs) {
-  return {
-    minMs:
-      retryTimeoutMinMs >= 0
-        ? retryTimeoutMinMs
-        : constants.DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS,
-    maxMs:
-      retryTimeoutMaxMs >= 0
-        ? retryTimeoutMaxMs
-        : constants.DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
-  };
 }
 
 async function batchWrite(
@@ -108,7 +32,7 @@ async function batchWrite(
   const runBatches = chunkedItems.map((batch, index) => {
     const batchWriteCommand = createBatchWriteCommand(tableName, batch);
 
-    return execAndRetryBatchWrite(
+    return execute(
       documentClient,
       batchWriteCommand,
       index + 1,
