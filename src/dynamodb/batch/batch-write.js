@@ -1,13 +1,8 @@
 const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
 
-const { chunk } = require('../array/chunk');
-const { randomInteger } = require('../randomizer/random-integer');
-
-const MAX_ITEMS_PER_BATCH = 25;
-const UNPROCESSED_RETRY_LIMIT = 2;
-
-const DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS = 300;
-const DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS = 1000;
+const { chunk } = require('../../array/chunk');
+const { randomInteger } = require('../../randomizer/random-integer');
+const constants = require('./constants');
 
 async function retryUnprocessedItems(
   documentClient,
@@ -16,7 +11,7 @@ async function retryUnprocessedItems(
   retryAttemptNo,
   retryOptions
 ) {
-  if (retryAttemptNo > UNPROCESSED_RETRY_LIMIT) {
+  if (retryAttemptNo > constants.UNPROCESSED_RETRY_LIMIT) {
     throw new Error(
       `BatchWrite batch: ${batchNo} - returned UnprocessedItems after ${retryAttemptNo} attempts (${
         retryAttemptNo - 1
@@ -91,11 +86,11 @@ function parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs) {
     minMs:
       retryTimeoutMinMs >= 0
         ? retryTimeoutMinMs
-        : DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS,
+        : constants.DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS,
     maxMs:
       retryTimeoutMaxMs >= 0
         ? retryTimeoutMaxMs
-        : DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
+        : constants.DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
   };
 }
 
@@ -106,7 +101,7 @@ async function batchWrite(
   retryTimeoutMinMs,
   retryTimeoutMaxMs
 ) {
-  const chunkedItems = chunk(items, MAX_ITEMS_PER_BATCH);
+  const chunkedItems = chunk(items, constants.MAX_ITEMS_PER_BATCH);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 

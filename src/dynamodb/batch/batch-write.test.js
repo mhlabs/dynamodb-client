@@ -7,14 +7,15 @@ const {
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
 const batchWrite = require('./batch-write');
+const constants = require('./constants');
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
 });
 
 describe('batchWrite', () => {
-  it('should split items into chunks of 25 (batchWrite limit)', async () => {
-    const items = Array(60).fill({ id: 1 });
+  it('should split items into chunks of max batch size (batchWrite limit)', async () => {
+    const items = Array(constants.MAX_ITEMS_PER_BATCH * 2 + 10).fill({ id: 1 });
     const res = await batchWrite(dynamoDbDocumentMock, 'testTable', items);
 
     expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
@@ -24,10 +25,10 @@ describe('batchWrite', () => {
     const commandCalls = dynamoDbDocumentMock.commandCalls(BatchWriteCommand);
 
     expect(commandCalls[0].args[0].input.RequestItems.testTable).toHaveLength(
-      25
+      constants.MAX_ITEMS_PER_BATCH
     );
     expect(commandCalls[1].args[0].input.RequestItems.testTable).toHaveLength(
-      25
+      constants.MAX_ITEMS_PER_BATCH
     );
     expect(commandCalls[2].args[0].input.RequestItems.testTable).toHaveLength(
       10
