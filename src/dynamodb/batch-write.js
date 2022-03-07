@@ -85,16 +85,8 @@ function createBatchWriteCommand(tableName, batch) {
   });
 }
 
-async function batchWrite(
-  documentClient,
-  tableName,
-  items,
-  retryTimeoutMinMs,
-  retryTimeoutMaxMs
-) {
-  const chunkedItems = chunk(items, MAX_ITEMS_PER_BATCH);
-
-  const retryOptions = {
+function parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs) {
+  return {
     minMs:
       retryTimeoutMinMs >= 0
         ? retryTimeoutMinMs
@@ -104,6 +96,18 @@ async function batchWrite(
         ? retryTimeoutMaxMs
         : DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
   };
+}
+
+async function batchWrite(
+  documentClient,
+  tableName,
+  items,
+  retryTimeoutMinMs,
+  retryTimeoutMaxMs
+) {
+  const chunkedItems = chunk(items, MAX_ITEMS_PER_BATCH);
+
+  const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 
   const runBatches = chunkedItems.map((batch, index) => {
     const batchWriteCommand = createBatchWriteCommand(tableName, batch);
