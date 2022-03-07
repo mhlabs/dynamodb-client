@@ -24,12 +24,17 @@ async function retryUnprocessedItems(
     );
   }
 
-  await new Promise((r) => {
-    const randomTimeoutToAvoidThrottling = randomInteger(
-      retryOptions.minMs,
-      retryOptions.maxMs
-    );
+  const randomTimeoutToAvoidThrottling = randomInteger(
+    retryOptions.minMs,
+    retryOptions.maxMs
+  );
 
+  console.log(
+    `UnprocessedItems, retrying after waiting ${randomTimeoutToAvoidThrottling} ms, attempt ${retryAttemptNo})...`,
+    unprocessedItems
+  );
+
+  await new Promise((r) => {
     setTimeout(r, randomTimeoutToAvoidThrottling);
   });
 
@@ -56,10 +61,6 @@ async function execAndRetryBatchWrite(
   const res = await documentClient.send(batchWriteCommand);
 
   if (res?.UnprocessedItems && Object.keys(res?.UnprocessedItems).length > 0) {
-    console.log(
-      `UnprocessedItems, retrying, attempt ${retryCount + 1})...`,
-      res.UnprocessedItems
-    );
     await retryUnprocessedItems(
       documentClient,
       res.UnprocessedItems,
