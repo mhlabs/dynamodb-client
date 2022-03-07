@@ -22,4 +22,10 @@ describe('random assignment', () => {
     const r = randomInteger(0, 0);
     expect(r).toBe(0);
   });
+
+  it('should return value in given interval', () => {
+    const r = randomInteger(1, 3);
+    expect(r).toBeGreaterThanOrEqual(1);
+    expect(r).toBeLessThanOrEqual(3);
+  });
 });
