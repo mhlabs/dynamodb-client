@@ -126,7 +126,4 @@ async function batchWrite(
   return true;
 }
 
-module.exports = {
-  batchWrite,
-  MAX_ITEMS_PER_BATCH
-};
+module.exports = batchWrite;

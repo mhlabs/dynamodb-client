@@ -2,9 +2,18 @@ const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
 
 const getItem = require('./src/dynamodb/get-item');
+const batchWrite = require('./src/dynamodb/batch-write');
 
 function createDynamoClient(documentClient) {
   return {
+    batchWrite: (tableName, items, retryTimeoutMinMs, retryTimeoutMaxMs) =>
+      batchWrite(
+        documentClient,
+        tableName,
+        items,
+        retryTimeoutMinMs,
+        retryTimeoutMaxMs
+      ),
     getItem: (tableName, key, options) =>
       getItem(documentClient, tableName, key, options)
   };
