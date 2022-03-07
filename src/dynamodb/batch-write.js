@@ -29,6 +29,7 @@ async function retryUnprocessedItems(
       retryOptions.minMs,
       retryOptions.maxMs
     );
+
     setTimeout(r, randomTimeoutToAvoidThrottling);
   });
 
@@ -94,8 +95,14 @@ async function batchWrite(
   const chunkedItems = chunk(items, MAX_ITEMS_PER_BATCH);
 
   const retryOptions = {
-    minMs: retryTimeoutMinMs || DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS,
-    maxMs: retryTimeoutMaxMs || DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
+    minMs:
+      retryTimeoutMinMs >= 0
+        ? retryTimeoutMinMs
+        : DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS,
+    maxMs:
+      retryTimeoutMaxMs >= 0
+        ? retryTimeoutMaxMs
+        : DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
   };
 
   const runBatches = chunkedItems.map((batch, index) => {
