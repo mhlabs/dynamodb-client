@@ -1,7 +1,7 @@
 jest.mock('./execute');
 
 const execute = require('./execute');
-const tested = require('./delete');
+const tested = require('./remove');
 const constants = require('./constants');
 
 beforeEach(() => {

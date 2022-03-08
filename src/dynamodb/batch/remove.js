@@ -27,7 +27,7 @@ function ensureValidParameters(documentClient, tableName, keys) {
     throw new Error('Keys must be objects.');
 }
 
-async function batchDelete(
+async function batchRemove(
   documentClient,
   tableName,
   keys,
@@ -59,4 +59,4 @@ async function batchDelete(
   return true;
 }
 
-module.exports = batchDelete;
+module.exports = batchRemove;

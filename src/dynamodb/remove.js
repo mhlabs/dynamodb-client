@@ -1,4 +1,4 @@
-const { GetCommand } = require('@aws-sdk/lib-dynamodb');
+const { DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 
 function ensureValidParameters(documentClient, tableName, key) {
   if (!documentClient) throw new Error('documentClient is required.');
@@ -7,19 +7,18 @@ function ensureValidParameters(documentClient, tableName, key) {
   if (typeof key !== 'object') throw new Error('key should be an object.');
 }
 
-async function getItem(documentClient, tableName, key, options = undefined) {
+async function remove(documentClient, tableName, key, options = undefined) {
   ensureValidParameters(documentClient, tableName, key);
 
-  const input = {
+  const deleteCommand = new DeleteCommand({
     TableName: tableName,
     Key: key,
     ...options
-  };
+  });
 
-  const command = new GetCommand(input);
-  const response = await documentClient.send(command);
+  await documentClient.send(deleteCommand);
 
-  return response?.Item || null;
+  return true;
 }
 
-module.exports = getItem;
+module.exports = remove;
