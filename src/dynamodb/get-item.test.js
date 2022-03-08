@@ -10,6 +10,12 @@ beforeEach(() => {
 });
 
 describe('get-item', () => {
+  it('should validate document client', async () => {
+    await expect(getItem(null, '', {})).rejects.toThrow(
+      'documentClient is required.'
+    );
+  });
+
   it('should validate table', async () => {
     await expect(tested(dynamoDbDocumentMock, '', {})).rejects.toThrow(
       'Table name is required.'
