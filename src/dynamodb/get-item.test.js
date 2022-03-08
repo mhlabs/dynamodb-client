@@ -11,26 +11,26 @@ beforeEach(() => {
 
 describe('get-item', () => {
   it('should validate document client', async () => {
-    await expect(getItem(null, '', {})).rejects.toThrow(
+    await expect(tested(null, '', {})).rejects.toThrow(
       'documentClient is required.'
     );
   });
 
   it('should validate table', async () => {
     await expect(tested(dynamoDbDocumentMock, '', {})).rejects.toThrow(
-      'Table name is required.'
+      'tableName is required.'
     );
   });
 
   it('should validate key', async () => {
     await expect(tested(dynamoDbDocumentMock, 'table')).rejects.toThrow(
-      'Key is required.'
+      'key is required.'
     );
   });
 
   it('should validate that key key is object', async () => {
     await expect(tested(dynamoDbDocumentMock, 'table', 'id')).rejects.toThrow(
-      'Key should be an object.'
+      'key should be an object.'
     );
   });
 
