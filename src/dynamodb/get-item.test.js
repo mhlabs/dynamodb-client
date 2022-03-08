@@ -3,7 +3,7 @@ const { GetCommand, DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-const getItem = require('./get-item');
+const tested = require('./get-item');
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
@@ -11,19 +11,19 @@ beforeEach(() => {
 
 describe('get-item', () => {
   it('should validate table', async () => {
-    await expect(getItem(dynamoDbDocumentMock, '', {})).rejects.toThrow(
+    await expect(tested(dynamoDbDocumentMock, '', {})).rejects.toThrow(
       'Table name is required.'
     );
   });
 
   it('should validate key', async () => {
-    await expect(getItem(dynamoDbDocumentMock, 'table')).rejects.toThrow(
+    await expect(tested(dynamoDbDocumentMock, 'table')).rejects.toThrow(
       'Key is required.'
     );
   });
 
   it('should validate that key key is object', async () => {
-    await expect(getItem(dynamoDbDocumentMock, 'table', 'id')).rejects.toThrow(
+    await expect(tested(dynamoDbDocumentMock, 'table', 'id')).rejects.toThrow(
       'Key should be an object.'
     );
   });
@@ -31,14 +31,14 @@ describe('get-item', () => {
   it('should return item', async () => {
     dynamoDbDocumentMock.on(GetCommand).resolves({ Item: { Id: 5 } });
 
-    const result = await getItem(dynamoDbDocumentMock, 'table', {});
+    const result = await tested(dynamoDbDocumentMock, 'table', {});
     expect(result.Id).toEqual(5);
   });
 
   it('should handle null repsonse', async () => {
     dynamoDbDocumentMock.on(GetCommand).resolves(null);
 
-    const result = await getItem(dynamoDbDocumentMock, 'table', {});
+    const result = await tested(dynamoDbDocumentMock, 'table', {});
     expect(result).toBeNull();
   });
 
@@ -50,7 +50,7 @@ describe('get-item', () => {
       ConsistentRead: true
     };
 
-    await getItem(dynamoDbDocumentMock, table, key, options);
+    await tested(dynamoDbDocumentMock, table, key, options);
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(GetCommand)[0].args[0].input;
