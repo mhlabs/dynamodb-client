@@ -36,6 +36,8 @@ async function batchDelete(
 ) {
   ensureValidParameters(documentClient, tableName, keys);
 
+  if (!keys.length) return true;
+
   const chunkedItems = chunk(keys, constants.MAX_ITEMS_PER_BATCH);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);

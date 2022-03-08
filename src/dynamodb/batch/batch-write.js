@@ -18,6 +18,12 @@ function createBatchWriteCommand(tableName, batch) {
   });
 }
 
+function ensureValidParameters(documentClient, tableName, items) {
+  if (!documentClient) throw new Error('documentClient is required.');
+  if (!tableName) throw new Error('Table name is required.');
+  if (!items) throw new Error('Item list is required.');
+}
+
 async function batchWrite(
   documentClient,
   tableName,
@@ -25,6 +31,10 @@ async function batchWrite(
   retryTimeoutMinMs,
   retryTimeoutMaxMs
 ) {
+  ensureValidParameters(documentClient, tableName, items);
+
+  if (!items.length) return true;
+
   const chunkedItems = chunk(items, constants.MAX_ITEMS_PER_BATCH);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);

@@ -10,9 +10,23 @@ beforeEach(() => {
 });
 
 describe('batchWrite', () => {
+  it('should validate document client', async () => {
+    await expect(tested(null, '', {})).rejects.toThrow(
+      'documentClient is required.'
+    );
+  });
+
+  it('should validate table', async () => {
+    await expect(tested({}, '', {})).rejects.toThrow('Table name is required.');
+  });
+
+  it('should validate item list', async () => {
+    await expect(tested({}, 'table')).rejects.toThrow('Item list is required.');
+  });
+
   it('should split items into chunks of max batch size (batchWrite limit)', async () => {
     const items = Array(constants.MAX_ITEMS_PER_BATCH * 2 + 10).fill({ id: 1 });
-    const res = await tested(null, 'testTable', items);
+    const res = await tested({}, 'testTable', items);
 
     expect(execute).toHaveBeenCalledTimes(3);
 
