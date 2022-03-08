@@ -1,9 +1,12 @@
 const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
 
-const getItem = require('./src/dynamodb/get-item');
-const batchWrite = require('./src/dynamodb/batch/write');
 const batchDelete = require('./src/dynamodb/batch/delete');
+const batchWrite = require('./src/dynamodb/batch/write');
+const getItem = require('./src/dynamodb/get-item');
+const putItem = require('./src/dynamodb/put-item');
+const remove = require('./src/dynamodb/remove');
+const scan = require('./src/dynamodb/scan');
 
 function createDynamoClient(documentClient) {
   return {
@@ -24,7 +27,12 @@ function createDynamoClient(documentClient) {
         retryTimeoutMaxMs
       ),
     getItem: (tableName, key, options) =>
-      getItem(documentClient, tableName, key, options)
+      getItem(documentClient, tableName, key, options),
+    putItem: (tableName, item, options) =>
+      putItem(documentClient, tableName, item, options),
+    remove: (tableName, key, options) =>
+      remove(documentClient, tableName, key, options),
+    scan: (tableName, options) => scan(documentClient, tableName, options)
   };
 }
 
