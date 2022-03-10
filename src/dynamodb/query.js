@@ -1,50 +1,6 @@
 const { QueryCommand } = require('@aws-sdk/lib-dynamodb');
 
-function ensureValidParameters(
-  documentClient,
-  tableName,
-  keyCondition,
-  indexQuery,
-  indexName
-) {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('table name is required.');
-  if (indexQuery && !indexName) throw new Error('indexName is required.');
-  if (!keyCondition) throw new Error('keyCondition is required.');
-  if (typeof keyCondition !== 'object')
-    throw new Error('keyCondition should be an object.');
-}
-async function query(
-  documentClient,
-  tableName,
-  keyCondition,
-  indexQuery = false,
-  indexName = undefined
-) {
-  ensureValidParameters(
-    documentClient,
-    tableName,
-    keyCondition,
-    indexQuery,
-    indexName
-  );
-
-  const input = {
-    // ExpressionAttributeValues: expressions.expressionAttributeValues,
-    // KeyConditionExpression: expressions.keyConditionExpression,
-    // ExpressionAttributeNames: expressions.expressionAttributeNames,
-    TableName: tableName
-  };
-
-  if (indexName) input.IndexName = indexName;
-
-  const command = new QueryCommand(input);
-  const data = await documentClient.send(command);
-
-  return data.Items;
-}
-
-function generateKeyCondition(attributeUpdates) {
+function generateKeyCondition(tableName, attributeUpdates) {
   let keyConditionExpression = '';
   const expressionAttributeValues = {};
   const expressionAttributeNames = {};
@@ -67,10 +23,51 @@ function generateKeyCondition(attributeUpdates) {
   });
 
   return {
-    expressionAttributeValues,
-    keyConditionExpression,
-    expressionAttributeNames
+    TableName: tableName,
+    ExpressionAttributeValues: expressionAttributeValues,
+    KeyConditionExpression: keyConditionExpression,
+    ExpressionAttributeNames: expressionAttributeNames
   };
+}
+
+function ensureValidParameters(
+  documentClient,
+  tableName,
+  keyCondition,
+  indexQuery,
+  indexName
+) {
+  if (!documentClient) throw new Error('documentClient is required.');
+  if (!tableName) throw new Error('table name is required.');
+  if (indexQuery && !indexName) throw new Error('indexName is required.');
+  if (!keyCondition) throw new Error('keyCondition is required.');
+  if (typeof keyCondition !== 'object')
+    throw new Error('keyCondition should be an object.');
+}
+
+async function query(
+  documentClient,
+  tableName,
+  keyCondition,
+  indexQuery = false,
+  indexName = undefined
+) {
+  ensureValidParameters(
+    documentClient,
+    tableName,
+    keyCondition,
+    indexQuery,
+    indexName
+  );
+
+  const input = generateKeyCondition(tableName, keyCondition);
+
+  if (indexName) input.IndexName = indexName;
+
+  const command = new QueryCommand(input);
+  const data = await documentClient.send(command);
+
+  return data.Items;
 }
 
 module.exports = query;
