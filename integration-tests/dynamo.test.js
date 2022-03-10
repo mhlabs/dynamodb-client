@@ -36,7 +36,7 @@ const tableParams = {
   ],
   GlobalSecondaryIndexes: [
     {
-      IndexName: 'Gsi',
+      IndexName: 'gsi',
       KeySchema: [
         {
           AttributeName: 'postal',
@@ -124,7 +124,14 @@ describe('dynamo integration tests', () => {
     result = await dynamo.scan(tableName);
     expect(result).toHaveLength(3);
 
-    // query
-    // queryByIndex
+    result = await dynamo.query(tableName, { id: items[1].id });
+    expect(result[0].city).toBe(items[1].city);
+
+    result = await dynamo.queryByIndex(
+      tableName,
+      { postal: items[1].postal },
+      tableParams.GlobalSecondaryIndexes[0].IndexName
+    );
+    expect(result[0].city).toBe(items[1].city);
   });
 });
