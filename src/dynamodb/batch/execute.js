@@ -1,25 +1,36 @@
-const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+const { BatchGetCommand, BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
 
 const { randomInteger } = require('../../randomizer/random-integer');
 const constants = require('./constants');
 
-function hasUnprocessedKeys(response) {
-  return (
+function needsRetry(response) {
+  const hasUnprocessededKeys =
     response?.UnprocessedKeys &&
-    Object.keys(response?.UnprocessedKeys).length > 0
-  );
+    Object.keys(response?.UnprocessedKeys).length > 0;
+
+  const hasUnprocessededItems =
+    response?.UnprocessedItems &&
+    Object.keys(response?.UnprocessedItems).length > 0;
+
+  return hasUnprocessededKeys || hasUnprocessededItems;
 }
 
 async function retryUnprocessedItems(
   documentClient,
-  unprocessedItems,
+  tableName,
+  response,
   batchNo,
   retryAttemptNo,
-  retryOptions
+  retryOptions,
+  previousItems
 ) {
   if (retryAttemptNo > constants.UNPROCESSED_ITEMS_RETRY_LIMIT) {
+    const unprocessed = response.UnprocessedItems
+      ? 'UnprocessedItems'
+      : 'UnprocessedKeys';
+
     throw new Error(
-      `BatchWrite batch: ${batchNo} - returned UnprocessedItems after ${retryAttemptNo} attempts (${
+      `Batch: ${batchNo} - returned ${unprocessed} after ${retryAttemptNo} attempts (${
         retryAttemptNo - 1
       } retries)`
     );
@@ -38,47 +49,62 @@ async function retryUnprocessedItems(
     setTimeout(r, randomTimeoutToAvoidThrottling);
   });
 
-  const batchWriteCommand = new BatchWriteCommand({
-    RequestItems: unprocessedItems
-  });
+  let command;
 
-  await execute(
+  if (response.UnprocessedItems) {
+    command = new BatchWriteCommand({
+      RequestItems: response.UnprocessedItems
+    });
+  } else if (response.UnprocessedKeys) {
+    command = new BatchGetCommand({
+      RequestItems: response.UnprocessedKeys
+    });
+  } else {
+    throw new Error('Retry called without any unprocessed items or keys.');
+  }
+
+  const items = await execute(
     documentClient,
-    batchWriteCommand,
+    tableName,
+    command,
     batchNo,
     retryAttemptNo,
-    retryOptions
+    retryOptions,
+    previousItems
   );
+
+  return items;
 }
 
 async function execute(
   documentClient,
-  batchWriteCommand,
+  tableName,
+  batchCommand,
   batchNo,
   retryCount,
-  retryOptions
+  retryOptions,
+  previousItems = []
 ) {
-  const res = await documentClient.send(batchWriteCommand);
+  let items = [...previousItems];
+  const response = await documentClient.send(batchCommand);
 
-  // responses.forEach((response) => {
-  //   items.push(...response.Responses[tableName]);
-  //   if (hasUnprocessedKeys(response)) {
-  //     unprocessedKeys.push(...response.UnprocessedKeys[tableName].Keys);
-  //   }
-  // });
-
-  if (res?.UnprocessedItems && Object.keys(res?.UnprocessedItems).length > 0) {
-    await retryUnprocessedItems(
-      documentClient,
-      res.UnprocessedItems,
-      batchNo,
-      retryCount + 1,
-      retryOptions
-    );
+  if (response.Responses && response.Responses[tableName]) {
+    items.push(...response.Responses[tableName]);
   }
 
-  // TODO: combine responses for get
-  return res;
+  if (!needsRetry(response)) return items;
+
+  items = await retryUnprocessedItems(
+    documentClient,
+    tableName,
+    response,
+    batchNo,
+    retryCount + 1,
+    retryOptions,
+    items
+  );
+
+  return items;
 }
 
 module.exports = execute;

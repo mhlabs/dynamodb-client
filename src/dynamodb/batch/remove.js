@@ -47,6 +47,7 @@ async function batchRemove(
 
     return execute(
       documentClient,
+      tableName,
       batchWriteCommand,
       index + 1,
       0,

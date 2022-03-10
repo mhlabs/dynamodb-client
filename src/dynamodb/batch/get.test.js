@@ -10,7 +10,7 @@ beforeEach(() => {
   execute.mockResolvedValue([]);
 });
 
-describe('batch remove', () => {
+describe('batch get', () => {
   it('should validate document client', async () => {
     await expect(tested(null, '', {})).rejects.toThrow(
       'documentClient is required.'
@@ -41,13 +41,13 @@ describe('batch remove', () => {
 
     expect(execute).toHaveBeenCalledTimes(3);
 
-    const firstRequest = execute.mock.calls[0][1].input.RequestItems.testTable;
+    const firstRequest = execute.mock.calls[0][2].input.RequestItems.testTable;
     expect(firstRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
-    const secondRequest = execute.mock.calls[1][1].input.RequestItems.testTable;
+    const secondRequest = execute.mock.calls[1][2].input.RequestItems.testTable;
     expect(secondRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
-    const thirdRequest = execute.mock.calls[2][1].input.RequestItems.testTable;
+    const thirdRequest = execute.mock.calls[2][2].input.RequestItems.testTable;
     expect(thirdRequest.Keys).toHaveLength(10);
 
     expect(res).toEqual([]);

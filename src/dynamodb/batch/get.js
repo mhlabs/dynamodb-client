@@ -45,7 +45,14 @@ async function batchGet(
 
   const runBatches = chunkedItems.map((batch, index) => {
     const batchGetCommand = createBatchGetCommand(tableName, batch, options);
-    return execute(documentClient, batchGetCommand, index + 1, 0, retryOptions);
+    return execute(
+      documentClient,
+      tableName,
+      batchGetCommand,
+      index + 1,
+      0,
+      retryOptions
+    );
   });
 
   const responses = await Promise.all(runBatches);

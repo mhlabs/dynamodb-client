@@ -40,15 +40,15 @@ describe('batch remove', () => {
 
     expect(execute).toHaveBeenCalledTimes(3);
 
-    const firstRequest = execute.mock.calls[0][1].input.RequestItems.testTable;
+    const firstRequest = execute.mock.calls[0][2].input.RequestItems.testTable;
     expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
     expect(firstRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 
-    const secondRequest = execute.mock.calls[1][1].input.RequestItems.testTable;
+    const secondRequest = execute.mock.calls[1][2].input.RequestItems.testTable;
     expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
     expect(secondRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 
-    const thirdRequest = execute.mock.calls[2][1].input.RequestItems.testTable;
+    const thirdRequest = execute.mock.calls[2][2].input.RequestItems.testTable;
     expect(thirdRequest).toHaveLength(10);
     expect(thirdRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 

@@ -44,6 +44,7 @@ async function batchWrite(
 
     return execute(
       documentClient,
+      tableName,
       batchWriteCommand,
       index + 1,
       0,
