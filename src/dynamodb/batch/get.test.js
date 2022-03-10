@@ -1,15 +1,16 @@
 jest.mock('./execute');
 
 const execute = require('./execute');
-const tested = require('./remove');
+const tested = require('./get');
 const constants = require('./constants');
 
 beforeEach(() => {
   jest.resetAllMocks();
   jest.restoreAllMocks();
+  execute.mockResolvedValue([]);
 });
 
-describe('batch remove', () => {
+describe('batch get', () => {
   it('should validate document client', async () => {
     await expect(tested(null, '', {})).rejects.toThrow(
       'documentClient is required.'
@@ -27,12 +28,12 @@ describe('batch remove', () => {
   it('should validate that keys are objects', async () => {
     const keys = [{}, 'b'];
     await expect(tested({}, 'table', keys)).rejects.toThrow(
-      'Keys must be objects.'
+      'All keys should be objects.'
     );
   });
 
   it('should split keys into chunks of max batch size (batchWrite limit)', async () => {
-    const keys = Array(constants.MAX_ITEMS_PER_BATCH_WRITE * 2 + 10).fill({
+    const keys = Array(constants.MAX_KEYS_PER_BATCH_GET * 2 + 10).fill({
       id: 1
     });
 
@@ -41,17 +42,14 @@ describe('batch remove', () => {
     expect(execute).toHaveBeenCalledTimes(3);
 
     const firstRequest = execute.mock.calls[0][2].input.RequestItems.testTable;
-    expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
-    expect(firstRequest.every((item) => item.DeleteRequest)).toBeTruthy();
+    expect(firstRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
     const secondRequest = execute.mock.calls[1][2].input.RequestItems.testTable;
-    expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
-    expect(secondRequest.every((item) => item.DeleteRequest)).toBeTruthy();
+    expect(secondRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
     const thirdRequest = execute.mock.calls[2][2].input.RequestItems.testTable;
-    expect(thirdRequest).toHaveLength(10);
-    expect(thirdRequest.every((item) => item.DeleteRequest)).toBeTruthy();
+    expect(thirdRequest.Keys).toHaveLength(10);
 
-    expect(res).toBe(true);
+    expect(res).toEqual([]);
   });
 });

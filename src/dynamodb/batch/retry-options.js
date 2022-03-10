@@ -5,11 +5,11 @@ function parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs) {
     minMs:
       retryTimeoutMinMs >= 0
         ? retryTimeoutMinMs
-        : constants.DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS,
+        : constants.DEFAULT_UNPROCESSED_ITEMS_MIN_RETRY_TIMOUT_MS,
     maxMs:
       retryTimeoutMaxMs >= 0
         ? retryTimeoutMaxMs
-        : constants.DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
+        : constants.DEFAULT_UNPROCESSED_ITEMS_MAX_RETRY_TIMOUT_MS
   };
 }
 

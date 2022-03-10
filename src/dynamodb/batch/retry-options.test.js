@@ -10,10 +10,10 @@ describe('retry options', () => {
   it('should use defaults if no valid options', () => {
     const result = tested(undefined, 'x');
     expect(result.minMs).toBe(
-      constants.DEFAULT_UNPROCESSED_MIN_RETRY_TIMOUT_MS
+      constants.DEFAULT_UNPROCESSED_ITEMS_MIN_RETRY_TIMOUT_MS
     );
     expect(result.maxMs).toBe(
-      constants.DEFAULT_UNPROCESSED_MAX_RETRY_TIMOUT_MS
+      constants.DEFAULT_UNPROCESSED_ITEMS_MAX_RETRY_TIMOUT_MS
     );
   });
 });

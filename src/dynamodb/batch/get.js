@@ -1,63 +1,66 @@
-const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+const { BatchGetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const { chunk } = require('../../array/chunk');
 const constants = require('./constants');
+
 const execute = require('./execute');
 const parseRetryOptions = require('./retry-options');
 
-function createBatchDeleteCommand(tableName, batch) {
-  const deleteRequests = batch.map((key) => ({
-    DeleteRequest: {
-      Key: key
-    }
-  }));
-  return new BatchWriteCommand({
+function createBatchGetCommand(tableName, batch, options) {
+  const command = new BatchGetCommand({
     RequestItems: {
-      [tableName]: deleteRequests
+      [tableName]: {
+        Keys: batch,
+        ...options
+      }
     }
   });
+
+  return command;
 }
 
 function ensureValidParameters(documentClient, tableName, keys) {
   if (!documentClient) throw new Error('documentClient is required.');
   if (!tableName) throw new Error('tableName is required.');
   if (!keys) throw new Error('Key list is required.');
-
   if (!keys.every((key) => typeof key === 'object'))
-    throw new Error('Keys must be objects.');
+    throw new Error('All keys should be objects.');
 }
 
-async function batchRemove(
+async function batchGet(
   documentClient,
   tableName,
   keys,
+  options,
   retryTimeoutMinMs,
   retryTimeoutMaxMs
 ) {
   ensureValidParameters(documentClient, tableName, keys);
 
-  if (!keys.length) return true;
+  if (!keys.length) return [];
 
-  const chunkedItems = chunk(keys, constants.MAX_ITEMS_PER_BATCH_WRITE);
+  const chunkedItems = chunk(keys, constants.MAX_KEYS_PER_BATCH_GET);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 
   const runBatches = chunkedItems.map((batch, index) => {
-    const batchWriteCommand = createBatchDeleteCommand(tableName, batch);
-
+    const batchGetCommand = createBatchGetCommand(tableName, batch, options);
     return execute(
       documentClient,
       tableName,
-      batchWriteCommand,
+      batchGetCommand,
       index + 1,
       0,
       retryOptions
     );
   });
 
-  await Promise.all(runBatches);
+  const responses = await Promise.all(runBatches);
 
-  return true;
+  const items = [];
+  responses.forEach((response) => items.push(...response));
+
+  return items;
 }
 
-module.exports = batchRemove;
+module.exports = batchGet;
