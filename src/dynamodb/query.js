@@ -1,6 +1,6 @@
 const { QueryCommand } = require('@aws-sdk/lib-dynamodb');
 
-function generateKeyCondition(tableName, attributeUpdates) {
+function generateKeyCondition(attributeUpdates) {
   let keyConditionExpression = '';
   const expressionAttributeValues = {};
   const expressionAttributeNames = {};
@@ -23,7 +23,6 @@ function generateKeyCondition(tableName, attributeUpdates) {
   });
 
   return {
-    TableName: tableName,
     ExpressionAttributeValues: expressionAttributeValues,
     KeyConditionExpression: keyConditionExpression,
     ExpressionAttributeNames: expressionAttributeNames
@@ -60,8 +59,9 @@ async function query(
     indexName
   );
 
-  const input = generateKeyCondition(tableName, keyCondition);
+  const input = generateKeyCondition(keyCondition);
 
+  input.TableName = tableName;
   if (indexName) input.IndexName = indexName;
 
   const command = new QueryCommand(input);
