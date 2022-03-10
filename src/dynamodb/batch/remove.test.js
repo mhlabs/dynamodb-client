@@ -9,7 +9,7 @@ beforeEach(() => {
   jest.restoreAllMocks();
 });
 
-describe('batch delete', () => {
+describe('batch remove', () => {
   it('should validate document client', async () => {
     await expect(tested(null, '', {})).rejects.toThrow(
       'documentClient is required.'
@@ -32,17 +32,20 @@ describe('batch delete', () => {
   });
 
   it('should split keys into chunks of max batch size (batchWrite limit)', async () => {
-    const keys = Array(constants.MAX_ITEMS_PER_BATCH * 2 + 10).fill({ id: 1 });
+    const keys = Array(constants.MAX_ITEMS_PER_BATCH_WRITE * 2 + 10).fill({
+      id: 1
+    });
+
     const res = await tested({}, 'testTable', keys);
 
     expect(execute).toHaveBeenCalledTimes(3);
 
     const firstRequest = execute.mock.calls[0][1].input.RequestItems.testTable;
-    expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH);
+    expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
     expect(firstRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 
     const secondRequest = execute.mock.calls[1][1].input.RequestItems.testTable;
-    expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH);
+    expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
     expect(secondRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 
     const thirdRequest = execute.mock.calls[2][1].input.RequestItems.testTable;

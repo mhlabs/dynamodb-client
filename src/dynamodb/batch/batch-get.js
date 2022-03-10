@@ -6,7 +6,7 @@ const constants = require('./constants');
 function ensureValidParameters(documentClient, tableName, keys) {
   if (!documentClient) throw new Error('documentClient is required.');
   if (!tableName) throw new Error('tableName is required.');
-  if (!keys) throw new Error('key is required.');
+  if (!keys) throw new Error('Key list is required.');
   if (!keys.every((key) => typeof key === 'object'))
     throw new Error('All keys should be objects.');
 }
@@ -52,9 +52,9 @@ async function batchGet(
   const unprocessedKeys = [];
 
   responses.forEach((response) => {
-    items.push(response.Responses[tableName]);
+    items.push(...response.Responses[tableName]);
     if (hasUnprocessedKeys(response)) {
-      unprocessedKeys.push(response.UnprocessedKeys);
+      unprocessedKeys.push(...response.UnprocessedKeys[tableName].Keys);
     }
   });
 
@@ -68,7 +68,7 @@ async function batchGet(
     retryAttempt + 1
   );
 
-  items.push(retryItems);
+  items.push(...retryItems);
 
   return items;
 }

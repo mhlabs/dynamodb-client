@@ -35,7 +35,7 @@ async function batchWrite(
 
   if (!items.length) return true;
 
-  const chunkedItems = chunk(items, constants.MAX_ITEMS_PER_BATCH);
+  const chunkedItems = chunk(items, constants.MAX_ITEMS_PER_BATCH_WRITE);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 
