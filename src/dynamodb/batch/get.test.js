@@ -4,7 +4,7 @@ const constants = require('./constants');
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-const tested = require('./batch-get');
+const tested = require('./get');
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
