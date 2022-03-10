@@ -7,6 +7,7 @@ const batchWrite = require('./src/dynamodb/batch/write');
 const getItem = require('./src/dynamodb/get-item');
 const putItem = require('./src/dynamodb/put-item');
 const remove = require('./src/dynamodb/remove');
+const query = require('./src/dynamodb/query');
 const scan = require('./src/dynamodb/scan');
 
 function createDynamoClient(documentClient) {
@@ -46,6 +47,10 @@ function createDynamoClient(documentClient) {
       getItem(documentClient, tableName, key, options),
     putItem: (tableName, item, options) =>
       putItem(documentClient, tableName, item, options),
+    query: (tableName, keyCondition) =>
+      query(documentClient, tableName, keyCondition),
+    queryByIndex: (tableName, keyCondition, indexName) =>
+      query(documentClient, tableName, keyCondition, true, indexName),
     remove: (tableName, key, options) =>
       remove(documentClient, tableName, key, options),
     scan: (tableName, options) => scan(documentClient, tableName, options)
