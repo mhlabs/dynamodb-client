@@ -38,7 +38,7 @@ async function batchRemove(
 
   if (!keys.length) return true;
 
-  const chunkedItems = chunk(keys, constants.MAX_ITEMS_PER_BATCH);
+  const chunkedItems = chunk(keys, constants.MAX_ITEMS_PER_BATCH_WRITE);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 

@@ -10,7 +10,7 @@ async function retryUnprocessedItems(
   retryAttemptNo,
   retryOptions
 ) {
-  if (retryAttemptNo > constants.UNPROCESSED_RETRY_LIMIT) {
+  if (retryAttemptNo > constants.UNPROCESSED_ITEMS_RETRY_LIMIT) {
     throw new Error(
       `BatchWrite batch: ${batchNo} - returned UnprocessedItems after ${retryAttemptNo} attempts (${
         retryAttemptNo - 1
