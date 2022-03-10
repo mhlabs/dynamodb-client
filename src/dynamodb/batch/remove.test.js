@@ -17,7 +17,7 @@ describe('batch remove', () => {
   });
 
   it('should validate table', async () => {
-    await expect(tested({}, '', {})).rejects.toThrow('Table name is required.');
+    await expect(tested({}, '', {})).rejects.toThrow('tableName is required.');
   });
 
   it('should validate key', async () => {

@@ -6,21 +6,21 @@ const execute = require('./execute');
 const parseRetryOptions = require('./retry-options');
 
 function createBatchDeleteCommand(tableName, batch) {
-  const putRequests = batch.map((key) => ({
+  const deleteRequests = batch.map((key) => ({
     DeleteRequest: {
       Key: key
     }
   }));
   return new BatchWriteCommand({
     RequestItems: {
-      [tableName]: putRequests
+      [tableName]: deleteRequests
     }
   });
 }
 
 function ensureValidParameters(documentClient, tableName, keys) {
   if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('Table name is required.');
+  if (!tableName) throw new Error('tableName is required.');
   if (!keys) throw new Error('Key list is required.');
 
   if (!keys.every((key) => typeof key === 'object'))

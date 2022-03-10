@@ -3,6 +3,22 @@ const { BatchGetCommand } = require('@aws-sdk/lib-dynamodb');
 const { chunk } = require('../../array/chunk');
 const constants = require('./constants');
 
+const execute = require('./execute');
+const parseRetryOptions = require('./retry-options');
+
+function createBatchGetCommand(tableName, batch, options) {
+  const command = new BatchGetCommand({
+    RequestItems: {
+      [tableName]: {
+        Keys: batch,
+        ...options
+      }
+    }
+  });
+
+  return command;
+}
+
 function ensureValidParameters(documentClient, tableName, keys) {
   if (!documentClient) throw new Error('documentClient is required.');
   if (!tableName) throw new Error('tableName is required.');
@@ -22,53 +38,26 @@ async function batchGet(
   documentClient,
   tableName,
   keys,
-  options = undefined,
-  retryAttempt = 0
+  options,
+  retryTimeoutMinMs,
+  retryTimeoutMaxMs
 ) {
-  if (retryAttempt > 1) {
-    throw new Error('batchGet error: returned UnprocessedKeys after retry');
-  }
-
   ensureValidParameters(documentClient, tableName, keys);
+
+  if (!keys.length) return [];
 
   const chunkedItems = chunk(keys, constants.MAX_KEYS_PER_BATCH_GET);
 
-  const runBatches = chunkedItems.map((keyBatch) => {
-    const command = new BatchGetCommand({
-      RequestItems: {
-        [tableName]: {
-          Keys: keyBatch,
-          ...options
-        }
-      }
-    });
+  const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 
-    return documentClient.send(command);
+  const runBatches = chunkedItems.map((batch, index) => {
+    const batchGetCommand = createBatchGetCommand(tableName, batch, options);
+    return execute(documentClient, batchGetCommand, index + 1, 0, retryOptions);
   });
 
   const responses = await Promise.all(runBatches);
 
   const items = [];
-  const unprocessedKeys = [];
-
-  responses.forEach((response) => {
-    items.push(...response.Responses[tableName]);
-    if (hasUnprocessedKeys(response)) {
-      unprocessedKeys.push(...response.UnprocessedKeys[tableName].Keys);
-    }
-  });
-
-  if (!unprocessedKeys.length) return items;
-
-  const retryItems = await batchGet(
-    documentClient,
-    tableName,
-    unprocessedKeys,
-    options,
-    retryAttempt + 1
-  );
-
-  items.push(...retryItems);
 
   return items;
 }

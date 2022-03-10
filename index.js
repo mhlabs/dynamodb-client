@@ -11,8 +11,21 @@ const scan = require('./src/dynamodb/scan');
 
 function createDynamoClient(documentClient) {
   return {
-    batchGet: (tableName, keys, options) =>
-      batchGet(documentClient, tableName, keys, options),
+    batchGet: (
+      tableName,
+      keys,
+      options,
+      retryTimeoutMinMs,
+      retryTimeoutMaxMs
+    ) =>
+      batchGet(
+        documentClient,
+        tableName,
+        keys,
+        options,
+        retryTimeoutMinMs,
+        retryTimeoutMaxMs
+      ),
     batchRemove: (tableName, keys, retryTimeoutMinMs, retryTimeoutMaxMs) =>
       batchRemove(
         documentClient,

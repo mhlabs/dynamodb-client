@@ -53,6 +53,13 @@ async function execute(
 ) {
   const res = await documentClient.send(batchWriteCommand);
 
+  // responses.forEach((response) => {
+  //   items.push(...response.Responses[tableName]);
+  //   if (hasUnprocessedKeys(response)) {
+  //     unprocessedKeys.push(...response.UnprocessedKeys[tableName].Keys);
+  //   }
+  // });
+
   if (res?.UnprocessedItems && Object.keys(res?.UnprocessedItems).length > 0) {
     await retryUnprocessedItems(
       documentClient,
