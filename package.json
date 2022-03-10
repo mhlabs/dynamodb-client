@@ -10,8 +10,9 @@
     ]
   },
   "scripts": {
-    "test": "jest",
-    "coverage": "jest --coverage"
+    "test": "jest ./src",
+    "coverage": "jest --coverage",
+    "integration-tests": "jest ./integration-tests"
   },
   "keywords": [
     "aws",
