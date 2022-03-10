@@ -3,6 +3,13 @@ const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
 const { randomInteger } = require('../../randomizer/random-integer');
 const constants = require('./constants');
 
+function hasUnprocessedKeys(response) {
+  return (
+    response?.UnprocessedKeys &&
+    Object.keys(response?.UnprocessedKeys).length > 0
+  );
+}
+
 async function retryUnprocessedItems(
   documentClient,
   unprocessedItems,
@@ -70,6 +77,7 @@ async function execute(
     );
   }
 
+  // TODO: combine responses for get
   return res;
 }
 

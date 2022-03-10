@@ -27,13 +27,6 @@ function ensureValidParameters(documentClient, tableName, keys) {
     throw new Error('All keys should be objects.');
 }
 
-function hasUnprocessedKeys(response) {
-  return (
-    response?.UnprocessedKeys &&
-    Object.keys(response?.UnprocessedKeys).length > 0
-  );
-}
-
 async function batchGet(
   documentClient,
   tableName,
@@ -58,6 +51,7 @@ async function batchGet(
   const responses = await Promise.all(runBatches);
 
   const items = [];
+  responses.forEach((response) => items.push(...response));
 
   return items;
 }
