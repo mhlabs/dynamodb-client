@@ -1,6 +1,6 @@
 {
   "name": "@mhlabs/dynamodb-client",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "A lib to simplify working with dynamodb documentclient in aws sdk v3.",
   "main": "index.js",
   "jest": {
@@ -10,8 +10,9 @@
     ]
   },
   "scripts": {
-    "test": "jest",
-    "coverage": "jest --coverage"
+    "test": "jest ./src",
+    "coverage": "jest ./src --coverage",
+    "integration-tests": "jest ./integration-tests"
   },
   "keywords": [
     "aws",
