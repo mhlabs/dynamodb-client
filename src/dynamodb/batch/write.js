@@ -4,6 +4,10 @@ const { chunk } = require('../../array/chunk');
 const constants = require('./constants');
 const execute = require('./execute');
 const parseRetryOptions = require('./retry-options');
+const {
+  filterUniqueObjects,
+  defaultDuplicateOptions
+} = require('./duplicate-handling/filter');
 
 function createBatchWriteCommand(tableName, batch) {
   const putRequests = batch.map((item) => ({
@@ -28,6 +32,7 @@ async function batchWrite(
   documentClient,
   tableName,
   items,
+  options,
   retryTimeoutMinMs,
   retryTimeoutMaxMs
 ) {
@@ -35,7 +40,10 @@ async function batchWrite(
 
   if (!items.length) return true;
 
-  const chunkedItems = chunk(items, constants.MAX_ITEMS_PER_BATCH_WRITE);
+  const commandOptions = { ...defaultDuplicateOptions, ...options };
+
+  const uniqueItems = filterUniqueObjects(items, commandOptions);
+  const chunkedItems = chunk(uniqueItems, constants.MAX_ITEMS_PER_BATCH_WRITE);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 

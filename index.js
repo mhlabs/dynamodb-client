@@ -27,19 +27,33 @@ function createDynamoClient(documentClient) {
         retryTimeoutMinMs,
         retryTimeoutMaxMs
       ),
-    batchRemove: (tableName, keys, retryTimeoutMinMs, retryTimeoutMaxMs) =>
+    batchRemove: (
+      tableName,
+      keys,
+      options,
+      retryTimeoutMinMs,
+      retryTimeoutMaxMs
+    ) =>
       batchRemove(
         documentClient,
         tableName,
         keys,
+        options,
         retryTimeoutMinMs,
         retryTimeoutMaxMs
       ),
-    batchWrite: (tableName, items, retryTimeoutMinMs, retryTimeoutMaxMs) =>
+    batchWrite: (
+      tableName,
+      items,
+      options,
+      retryTimeoutMinMs,
+      retryTimeoutMaxMs
+    ) =>
       batchWrite(
         documentClient,
         tableName,
         items,
+        options,
         retryTimeoutMinMs,
         retryTimeoutMaxMs
       ),

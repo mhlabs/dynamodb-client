@@ -25,11 +25,16 @@ describe('batchWrite', () => {
   });
 
   it('should split items into chunks of max batch size (batchWrite limit)', async () => {
-    const items = Array(constants.MAX_ITEMS_PER_BATCH_WRITE * 2 + 10).fill({
-      id: 1
-    });
+    const arrayLength = constants.MAX_ITEMS_PER_BATCH_WRITE * 2 + 10;
+    const items = Array.from(Array(arrayLength), (_, index) => ({
+      id: index + 1
+    }));
 
-    const res = await tested({}, 'testTable', items);
+    const res = await tested({}, 'testTable', items, {
+      duplicateConfig: {
+        partitionKeyAttributeName: 'id'
+      }
+    });
 
     expect(execute).toHaveBeenCalledTimes(3);
 

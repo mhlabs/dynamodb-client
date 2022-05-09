@@ -18,7 +18,7 @@ function filterUniqueKeys(keys = []) {
   return uniqueKeys;
 }
 
-const defaultOptions = {
+const defaultDuplicateOptions = {
   duplicateConfig: {
     partitionKeyAttributeName: '',
     sortKeyAttributeName: '',
@@ -30,7 +30,8 @@ function keyComparer(object1, object2, options) {
   const pk = options.duplicateConfig.partitionKeyAttributeName;
   const sk = options.duplicateConfig.sortKeyAttributeName;
 
-  return object1[pk] === object2[pk] && object1[sk] === object2[sk];
+  if (sk) return object1[pk] === object2[pk] && object1[sk] === object2[sk];
+  return object1[pk] === object2[pk];
 }
 
 function objectAlreadySetAsUnique(uniqueObjects, object, options) {
@@ -73,12 +74,11 @@ function getLatestInstance(objects, currentObject, options) {
   return latest[0];
 }
 
-function filterUniqueObjects(objects = [], options = defaultOptions) {
-  if (
-    !options.duplicateConfig.partitionKeyAttributeName ||
-    !options.duplicateConfig.sortKeyAttributeName
-  ) {
-    throw new Error('Key attribute names must be set in duplicateConfig');
+function filterUniqueObjects(objects = [], options = defaultDuplicateOptions) {
+  if (!options.duplicateConfig.partitionKeyAttributeName) {
+    throw new Error(
+      'At least partition key attribute must be set in duplicateConfig'
+    );
   }
 
   if (!objects.length) return objects;
@@ -96,7 +96,7 @@ function filterUniqueObjects(objects = [], options = defaultOptions) {
 }
 
 module.exports = {
-  defaultOptions,
+  defaultDuplicateOptions,
   filterUniqueKeys,
   filterUniqueObjects
 };

@@ -18,9 +18,9 @@ describe('filter duplicates', () => {
     );
   });
 
-  it('should verify that key attribute names are set when filtering objects', () => {
+  it('should verify that partition key name are set when filtering objects', () => {
     expect(() => tested.filterUniqueObjects(testData)).toThrow(
-      'Key attribute names must be set in duplicateConfig'
+      'At least partition key attribute must be set in duplicateConfig'
     );
   });
 
