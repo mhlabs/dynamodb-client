@@ -33,9 +33,10 @@ describe('batch get', () => {
   });
 
   it('should split keys into chunks of max batch size (batchWrite limit)', async () => {
-    const keys = Array(constants.MAX_KEYS_PER_BATCH_GET * 2 + 10).fill({
-      id: 1
-    });
+    const arrayLength = constants.MAX_KEYS_PER_BATCH_GET * 2 + 10;
+    const keys = Array.from(Array(arrayLength), (_, index) => ({
+      id: index + 1
+    }));
 
     const res = await tested({}, 'testTable', keys);
 
