@@ -23,20 +23,20 @@
   "author": "mhlabs",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.53.0",
-    "@aws-sdk/lib-dynamodb": "^3.53.0"
+    "@aws-sdk/client-dynamodb": "^3.85.0",
+    "@aws-sdk/lib-dynamodb": "^3.85.0"
   },
   "devDependencies": {
-    "@types/jest": "^27.4.1",
+    "@types/jest": "^27.5.0",
     "aws-sdk-client-mock": "^0.6.2",
-    "eslint": "^8.10.0",
+    "eslint": "^8.15.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-jest": "^26.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jest": "^26.1.5",
     "eslint-plugin-prettier": "^4.0.0",
-    "jest": "^27.5.1",
-    "prettier": "^2.5.1"
+    "jest": "^28.1.0",
+    "prettier": "^2.6.2"
   },
   "publishConfig": {
     "access": "public"
