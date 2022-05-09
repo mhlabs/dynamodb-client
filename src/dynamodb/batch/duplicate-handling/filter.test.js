@@ -24,21 +24,46 @@ describe('filter duplicates', () => {
     );
   });
 
+  const options = {
+    duplicateConfig: {
+      timestampAttributeName: 'timestamp',
+      partitionKeyAttributeName: 'id',
+      sortKeyAttributeName: 'id2'
+    }
+  };
+
   it('should filter out duplicate objects by given root timestamp property', () => {
-    const uniqueObjects = tested.filterUniqueObjects(testData, {
-      duplicateConfig: {
-        timestampAttributeName: 'timestamp',
-        partitionKeyAttributeName: 'id',
-        sortKeyAttributeName: 'id2'
-      }
-    });
+    const uniqueObjects = tested.filterUniqueObjects(testData, options);
 
     expect(uniqueObjects.length).toBe(2);
     expect(uniqueObjects[0].id).toBe(1);
-    expect(uniqueObjects[0].timestamp).toBe('2022-05-10T10:36:12+02:00');
+    expect(uniqueObjects[0].timestamp).toBe('2022-05-09T10:36:12+02:00');
     expect(uniqueObjects[1].id).toBe(2);
   });
 
-  it('should filter out duplicate objects by given nested timestamp property', () => {});
-  it('should filter out duplicate objects without timestamp property', () => {});
+  it('should filter out duplicate objects by given nested timestamp property', () => {
+    const config = { ...options };
+    config.duplicateConfig.timestampAttributeName = 'updatedExternal.at';
+
+    const uniqueObjects = tested.filterUniqueObjects(testData, config);
+
+    expect(uniqueObjects.length).toBe(2);
+    expect(uniqueObjects[0].id).toBe(1);
+    expect(uniqueObjects[0].updatedExternal.at).toBe(
+      '2022-05-09T10:36:12+02:00'
+    );
+    expect(uniqueObjects[1].id).toBe(2);
+  });
+
+  it('should filter out duplicate objects without timestamp property', () => {
+    const config = { ...options };
+    config.duplicateConfig.timestampAttributeName = '';
+
+    const uniqueObjects = tested.filterUniqueObjects(testData, config);
+
+    expect(uniqueObjects.length).toBe(2);
+    expect(uniqueObjects[0].id).toBe(1);
+    expect(uniqueObjects[0].timestamp).toBe('2022-05-02T10:36:12+02:00');
+    expect(uniqueObjects[1].id).toBe(2);
+  });
 });

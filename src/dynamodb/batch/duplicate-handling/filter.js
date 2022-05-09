@@ -37,6 +37,24 @@ function objectAlreadySetAsUnique(uniqueObjects, object, options) {
   return uniqueObjects.some((unique) => keyComparer(object, unique, options));
 }
 
+function getSortAttributeValues(a, b, sortAttribute) {
+  if (!sortAttribute.includes('.'))
+    return {
+      a: a[sortAttribute],
+      b: b[sortAttribute]
+    };
+
+  const firstSeparator = sortAttribute.indexOf('.');
+  const currentAttribute = sortAttribute.substr(0, firstSeparator);
+  const remainingAttributes = sortAttribute.substr(firstSeparator + 1);
+
+  return getSortAttributeValues(
+    a[currentAttribute],
+    b[currentAttribute],
+    remainingAttributes
+  );
+}
+
 function getLatestInstance(objects, currentObject, options) {
   const sortAttribute = options.duplicateConfig.timestampAttributeName;
 
@@ -44,11 +62,13 @@ function getLatestInstance(objects, currentObject, options) {
     keyComparer(currentObject, object, options)
   );
 
-  if (instances.length === 0) return instances[0];
+  if (instances.length === 1) return instances[0];
+  if (!sortAttribute) return instances[instances.length - 1];
 
-  const latest = instances.sort((a, b) =>
-    b[sortAttribute] >= a[sortAttribute] ? 1 : 0
-  );
+  const latest = instances.sort((a, b) => {
+    const values = getSortAttributeValues(a, b, sortAttribute);
+    return values.b >= values.a ? 1 : -1;
+  });
 
   return latest[0];
 }
@@ -76,6 +96,7 @@ function filterUniqueObjects(objects = [], options = defaultOptions) {
 }
 
 module.exports = {
+  defaultOptions,
   filterUniqueKeys,
   filterUniqueObjects
 };
