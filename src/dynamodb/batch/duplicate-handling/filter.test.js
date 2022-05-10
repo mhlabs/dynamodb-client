@@ -14,7 +14,7 @@ describe('filter duplicates', () => {
   it('should verify that keys for filtering are objects', () => {
     const keys = [{}, 'a'];
     expect(() => tested.filterUniqueKeys(keys)).toThrow(
-      'All keys should must be objects'
+      'All keys must be objects'
     );
   });
 

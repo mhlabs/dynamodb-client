@@ -1,21 +1,24 @@
-function filterUniqueKeys(keys = []) {
-  if (!keys || !keys.length) return [];
-  if (keys.some((key) => typeof key !== 'object'))
-    throw new Error('All keys should must be objects.');
+function filterUniqueKeys(keyObjects = []) {
+  if (!keyObjects || !keyObjects.length) return [];
+  if (keyObjects.some((key) => typeof key !== 'object'))
+    throw new Error('All keys must be objects.');
 
-  const stringifiedKeys = [];
-  const uniqueKeys = [];
+  const stringifiedKeyObjects = [];
+  const uniqueKeyObjects = [];
 
-  keys.forEach((key) => {
+  keyObjects.forEach((keyObject) => {
     if (
-      !stringifiedKeys.find((stringKey) => stringKey === JSON.stringify(key))
+      !stringifiedKeyObjects.find(
+        (stringifiedKeyObject) =>
+          stringifiedKeyObject === JSON.stringify(keyObject)
+      )
     ) {
-      stringifiedKeys.push(JSON.stringify(key));
-      uniqueKeys.push(key);
+      stringifiedKeyObjects.push(JSON.stringify(keyObject));
+      uniqueKeyObjects.push(keyObject);
     }
   });
 
-  return uniqueKeys;
+  return uniqueKeyObjects;
 }
 
 const defaultDuplicateOptions = {
