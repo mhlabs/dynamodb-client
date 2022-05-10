@@ -25,7 +25,7 @@ const defaultDuplicateOptions = {
   duplicateConfig: {
     partitionKeyAttributeName: '',
     sortKeyAttributeName: '',
-    timestampAttributeName: ''
+    versionAttributeName: ''
   }
 };
 
@@ -60,7 +60,7 @@ function getSortAttributeValues(a, b, sortAttribute) {
 }
 
 function getLatestInstance(objects, currentObject, options) {
-  const sortAttribute = options.duplicateConfig.timestampAttributeName;
+  const sortAttribute = options.duplicateConfig.versionAttributeName;
 
   const instances = objects.filter((object) =>
     keyComparer(currentObject, object, options)

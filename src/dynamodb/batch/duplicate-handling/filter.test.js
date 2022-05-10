@@ -26,7 +26,7 @@ describe('filter duplicates', () => {
 
   const options = {
     duplicateConfig: {
-      timestampAttributeName: 'timestamp',
+      versionAttributeName: 'timestamp',
       partitionKeyAttributeName: 'id',
       sortKeyAttributeName: 'id2'
     }
@@ -43,7 +43,7 @@ describe('filter duplicates', () => {
 
   it('should filter out duplicate objects by given nested timestamp property', () => {
     const config = { ...options };
-    config.duplicateConfig.timestampAttributeName = 'updatedExternal.at';
+    config.duplicateConfig.versionAttributeName = 'updatedExternal.at';
 
     const uniqueObjects = tested.filterUniqueObjects(testData, config);
 
@@ -57,7 +57,7 @@ describe('filter duplicates', () => {
 
   it('should filter out duplicate objects without timestamp property', () => {
     const config = { ...options };
-    config.duplicateConfig.timestampAttributeName = '';
+    config.duplicateConfig.versionAttributeName = '';
 
     const uniqueObjects = tested.filterUniqueObjects(testData, config);
 
