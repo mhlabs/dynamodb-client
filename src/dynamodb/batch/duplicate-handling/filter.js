@@ -29,16 +29,12 @@ const defaultDuplicateOptions = {
   }
 };
 
-function keyComparer(object1, object2, options) {
+function sameKey(object1, object2, options) {
   const pk = options.duplicateConfig.partitionKeyAttributeName;
   const sk = options.duplicateConfig.sortKeyAttributeName;
 
   if (sk) return object1[pk] === object2[pk] && object1[sk] === object2[sk];
   return object1[pk] === object2[pk];
-}
-
-function objectAlreadySetAsUnique(uniqueObjects, object, options) {
-  return uniqueObjects.some((unique) => keyComparer(object, unique, options));
 }
 
 function getSortAttributeValues(a, b, sortAttribute) {
@@ -63,7 +59,7 @@ function getLatestInstance(objects, currentObject, options) {
   const sortAttribute = options.duplicateConfig.versionAttributeName;
 
   const instances = objects.filter((object) =>
-    keyComparer(currentObject, object, options)
+    sameKey(currentObject, object, options)
   );
 
   if (instances.length === 1) return instances[0];
@@ -89,7 +85,11 @@ function filterUniqueObjects(objects = [], options = defaultDuplicateOptions) {
   const uniqueObjects = [];
 
   objects.forEach((object) => {
-    if (objectAlreadySetAsUnique(uniqueObjects, object, options)) return;
+    const uniqueKeyAlreadyAdded = uniqueObjects.some((unique) =>
+      sameKey(object, unique, options)
+    );
+
+    if (uniqueKeyAlreadyAdded) return;
 
     const latest = getLatestInstance(objects, object, options);
     uniqueObjects.push(latest);
