@@ -4,6 +4,7 @@ const { chunk } = require('../../array/chunk');
 const constants = require('./constants');
 const execute = require('./execute');
 const parseRetryOptions = require('./retry-options');
+const { filterUniqueKeys } = require('./duplicate-handling/filter');
 
 function createBatchDeleteCommand(tableName, batch) {
   const deleteRequests = batch.map((key) => ({
@@ -38,7 +39,8 @@ async function batchRemove(
 
   if (!keys.length) return true;
 
-  const chunkedItems = chunk(keys, constants.MAX_ITEMS_PER_BATCH_WRITE);
+  const uniqueKeys = filterUniqueKeys(keys);
+  const chunkedItems = chunk(uniqueKeys, constants.MAX_ITEMS_PER_BATCH_WRITE);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 

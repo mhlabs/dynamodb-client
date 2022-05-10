@@ -5,6 +5,7 @@ const constants = require('./constants');
 
 const execute = require('./execute');
 const parseRetryOptions = require('./retry-options');
+const { filterUniqueKeys } = require('./duplicate-handling/filter');
 
 function createBatchGetCommand(tableName, batch, options) {
   const command = new BatchGetCommand({
@@ -39,7 +40,8 @@ async function batchGet(
 
   if (!keys.length) return [];
 
-  const chunkedItems = chunk(keys, constants.MAX_KEYS_PER_BATCH_GET);
+  const uniqueKeys = filterUniqueKeys(keys);
+  const chunkedItems = chunk(uniqueKeys, constants.MAX_KEYS_PER_BATCH_GET);
 
   const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
 
