@@ -23,8 +23,8 @@
   "author": "mhlabs",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.85.0",
-    "@aws-sdk/lib-dynamodb": "^3.85.0"
+    "@aws-sdk/client-dynamodb": "^3.87.0",
+    "@aws-sdk/lib-dynamodb": "^3.87.0"
   },
   "devDependencies": {
     "@types/jest": "^27.5.0",
