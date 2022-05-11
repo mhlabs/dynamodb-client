@@ -61,6 +61,12 @@ const tableParams = {
   }
 };
 
+const duplicateOptions = {
+  duplicateConfig: {
+    partitionKeyAttributeName: 'id'
+  }
+};
+
 beforeAll(async () => {
   await dynamoClient.send(new CreateTableCommand(tableParams));
 });
@@ -84,7 +90,7 @@ describe('dynamo integration tests', () => {
   });
 
   it('should be able to perform all dynamo operations', async () => {
-    let result = await dynamo.batchWrite(tableName, items);
+    let result = await dynamo.batchWrite(tableName, items, duplicateOptions);
     expect(result).toBe(true);
 
     result = await dynamo.scan(tableName);
@@ -100,7 +106,7 @@ describe('dynamo integration tests', () => {
     result = await dynamo.scan(tableName);
     expect(result).toHaveLength(0);
 
-    result = await dynamo.batchWrite(tableName, items);
+    result = await dynamo.batchWrite(tableName, items, duplicateOptions);
     expect(result).toBe(true);
 
     result = await dynamo.batchGet(
