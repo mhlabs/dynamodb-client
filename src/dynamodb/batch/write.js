@@ -28,7 +28,7 @@ function ensureValidParameters(documentClient, tableName, items) {
   if (!tableName) throw new Error('Table name is required.');
   if (!items) throw new Error('Item list is required.');
   if (isMultidimensional(items))
-    throw new Error("Item list can't contain arrays (multidimensional).");
+    throw new Error("Item list can't contain arrays (be multidimensional).");
 }
 
 async function batchWrite(
