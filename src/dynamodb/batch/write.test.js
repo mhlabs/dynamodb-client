@@ -22,6 +22,9 @@ describe('batchWrite', () => {
 
   it('should validate item list', async () => {
     await expect(tested({}, 'table')).rejects.toThrow('Item list is required.');
+    await expect(tested({}, 'table', [1, [2, 3]])).rejects.toThrow(
+      'Item list should not be multidimensional.'
+    );
   });
 
   it('should split items into chunks of max batch size (batchWrite limit)', async () => {
