@@ -1,6 +1,6 @@
 {
   "name": "@mhlabs/dynamodb-client",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A lib to simplify working with dynamodb documentclient in aws sdk v3.",
   "main": "index.js",
   "jest": {
