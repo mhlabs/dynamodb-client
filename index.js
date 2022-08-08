@@ -87,8 +87,23 @@ function init(dynamoDbClientConfig = undefined, translateConfig = undefined) {
   return createDynamoClient(documentClient);
 }
 
+function initWithClient(client, translateConfig = undefined) {
+  const translateOptions = { ...translateConfig };
+
+  if (!translateOptions.marshallOptions) {
+    translateOptions.marshallOptions = {
+      removeUndefinedValues: true
+    };
+  }
+
+  const documentClient = DynamoDBDocument.from(client, translateOptions);
+
+  return createDynamoClient(documentClient);
+}
+
 const dynamoClient = {
-  init
+  init,
+  initWithClient
 };
 
 module.exports = dynamoClient;
