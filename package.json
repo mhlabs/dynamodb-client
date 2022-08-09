@@ -27,7 +27,7 @@
     "@aws-sdk/lib-dynamodb": "^3.87.0"
   },
   "devDependencies": {
-    "@types/jest": "^27.5.0",
+    "@types/jest": "^28.1.6",
     "aws-sdk-client-mock": "^0.6.2",
     "eslint": "^8.15.0",
     "eslint-config-airbnb-base": "15.0.0",
