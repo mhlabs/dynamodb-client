@@ -1,6 +1,12 @@
-const { QueryCommand } = require('@aws-sdk/lib-dynamodb');
+import {
+  DynamoDBDocument,
+  QueryCommand,
+  QueryCommandInput
+} from '@aws-sdk/lib-dynamodb';
 
-function generateKeyCondition(attributeUpdates) {
+const generateKeyCondition = (
+  attributeUpdates: Record<string, any>
+): QueryCommandInput => {
   let keyConditionExpression = '';
   const expressionAttributeValues = {};
   const expressionAttributeNames = {};
@@ -26,31 +32,31 @@ function generateKeyCondition(attributeUpdates) {
     ExpressionAttributeValues: expressionAttributeValues,
     KeyConditionExpression: keyConditionExpression,
     ExpressionAttributeNames: expressionAttributeNames
-  };
-}
+  } as QueryCommandInput;
+};
 
-function ensureValidParameters(
-  documentClient,
-  tableName,
-  keyCondition,
-  indexQuery,
-  indexName
-) {
+const ensureValidParameters = (
+  documentClient: DynamoDBDocument,
+  tableName: string,
+  keyCondition: Record<string, any>,
+  indexQuery: boolean,
+  indexName?: string
+) => {
   if (!documentClient) throw new Error('documentClient is required.');
   if (!tableName) throw new Error('table name is required.');
   if (indexQuery && !indexName) throw new Error('indexName is required.');
   if (!keyCondition) throw new Error('keyCondition is required.');
   if (typeof keyCondition !== 'object')
     throw new Error('keyCondition should be an object.');
-}
+};
 
-async function query(
-  documentClient,
-  tableName,
-  keyCondition,
+export const query = async <T>(
+  documentClient: DynamoDBDocument,
+  tableName: string,
+  keyCondition: Record<string, any>,
   indexQuery = false,
-  indexName = undefined
-) {
+  indexName?: string
+): Promise<T[]> => {
   ensureValidParameters(
     documentClient,
     tableName,
@@ -67,7 +73,5 @@ async function query(
   const command = new QueryCommand(input);
   const data = await documentClient.send(command);
 
-  return data.Items;
-}
-
-module.exports = query;
+  return data.Items as T[];
+};

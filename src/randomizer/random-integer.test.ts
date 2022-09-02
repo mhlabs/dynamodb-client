@@ -1,4 +1,4 @@
-const { randomInteger } = require('./random-integer');
+import { randomInteger } from './random-integer';
 
 describe('random assignment', () => {
   it('should assign randomly and evenly', () => {

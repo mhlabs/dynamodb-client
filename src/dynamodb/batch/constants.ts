@@ -1,4 +1,4 @@
-module.exports = {
+export const constants = {
   MAX_KEYS_PER_BATCH_GET: 100,
   MAX_ITEMS_PER_BATCH_WRITE: 25,
   UNPROCESSED_ITEMS_RETRY_LIMIT: 2,

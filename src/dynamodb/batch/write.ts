@@ -1,16 +1,20 @@
-const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+import { BatchWriteCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
-const { chunk } = require('../../array/chunk');
-const constants = require('./constants');
-const execute = require('./execute');
-const parseRetryOptions = require('./retry-options');
-const {
+import { chunk } from '../../array/chunk';
+import { constants } from './constants';
+import { execute } from './execute';
+import { parseRetryOptions } from './retry-options';
+import {
   filterUniqueObjects,
-  defaultDuplicateOptions
-} = require('./duplicate-handling/filter');
-const { isMultidimensional } = require('../../array/isMultidimensional');
+  defaultDuplicateOptions,
+  DuplicateOptions
+} from './duplicate-handling/filter';
+import { isMultidimensional } from '../../array/isMultidimensional';
 
-function createBatchWriteCommand(tableName, batch) {
+const createBatchWriteCommand = (
+  tableName: string,
+  batch: Record<string, any>[]
+): BatchWriteCommand => {
   const putRequests = batch.map((item) => ({
     PutRequest: {
       Item: item
@@ -21,24 +25,28 @@ function createBatchWriteCommand(tableName, batch) {
       [tableName]: putRequests
     }
   });
-}
+};
 
-function ensureValidParameters(documentClient, tableName, items) {
+const ensureValidParameters = (
+  documentClient: DynamoDBDocument,
+  tableName: string,
+  items: Record<string, any>[]
+) => {
   if (!documentClient) throw new Error('documentClient is required.');
   if (!tableName) throw new Error('Table name is required.');
   if (!items) throw new Error('Item list is required.');
   if (isMultidimensional(items))
     throw new Error("Item list can't contain arrays (be multidimensional).");
-}
+};
 
-async function batchWrite(
-  documentClient,
-  tableName,
-  items,
-  options,
-  retryTimeoutMinMs,
-  retryTimeoutMaxMs
-) {
+export const batchWrite = async (
+  documentClient: DynamoDBDocument,
+  tableName: string,
+  items: Record<string, any>[],
+  options: DuplicateOptions,
+  retryTimeoutMinMs: number,
+  retryTimeoutMaxMs: number
+): Promise<boolean> => {
   ensureValidParameters(documentClient, tableName, items);
 
   if (!items.length) return true;
@@ -66,6 +74,4 @@ async function batchWrite(
   await Promise.all(runBatches);
 
   return true;
-}
-
-module.exports = batchWrite;
+};

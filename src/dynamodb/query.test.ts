@@ -1,11 +1,15 @@
-const { mockClient } = require('aws-sdk-client-mock');
-const { DynamoDBDocument, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+import { mockClient } from 'aws-sdk-client-mock';
+import { DynamoDBDocument, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-const tested = require('./query');
+import { query as tested } from './query';
 
 const table = 'table';
+
+interface DynamoItem {
+  SomeValue: number;
+}
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
@@ -13,43 +17,19 @@ beforeEach(() => {
 });
 
 describe('query', () => {
-  it('should validate documentClient', async () => {
-    await expect(tested()).rejects.toThrow('documentClient is required.');
-  });
-
-  it('should validate table', async () => {
-    await expect(tested(dynamoDbDocumentMock, '')).rejects.toThrow(
-      'table name is required.'
-    );
-  });
-
-  it('should validate indexName', async () => {
-    await expect(tested(dynamoDbDocumentMock, table, {}, true)).rejects.toThrow(
-      'indexName is required.'
-    );
-  });
-
-  it('should validate keyCondition', async () => {
-    await expect(tested(dynamoDbDocumentMock, table)).rejects.toThrow(
-      'keyCondition is required.'
-    );
-  });
-
-  it('should validate that key condition is object', async () => {
-    await expect(tested(dynamoDbDocumentMock, table, 'a')).rejects.toThrow(
-      'keyCondition should be an object.'
-    );
-  });
-
   it('should return items', async () => {
-    const result = await tested(dynamoDbDocumentMock, table, {});
+    const result = await tested<DynamoItem>(
+      dynamoDbDocumentMock as any,
+      table,
+      {}
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0].SomeValue).toBe(1);
   });
 
   it('should apply index name for index query', async () => {
-    await tested(dynamoDbDocumentMock, table, {}, true, 'index');
+    await tested(dynamoDbDocumentMock as any, table, {}, true, 'index');
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(QueryCommand)[0].args[0].input;
@@ -62,7 +42,7 @@ describe('query', () => {
     const name = 'someone';
     const attribute = { name };
 
-    await tested(dynamoDbDocumentMock, table, attribute);
+    await tested(dynamoDbDocumentMock as any, table, attribute);
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(QueryCommand)[0].args[0].input;
@@ -84,7 +64,7 @@ describe('query', () => {
       name: 'J Doe'
     };
 
-    await tested(dynamoDbDocumentMock, table, attributes);
+    await tested(dynamoDbDocumentMock as any, table, attributes);
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(QueryCommand)[0].args[0].input;

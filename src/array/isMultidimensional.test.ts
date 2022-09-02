@@ -1,7 +1,7 @@
-const { isMultidimensional } = require('./isMultidimensional');
+import { isMultidimensional } from './isMultidimensional';
 
 describe('isMultidimensional', () => {
-  const isNotMultidimensionalCases = [[[1, 2]], [[]], [null]];
+  const isNotMultidimensionalCases = [[[1, 2]], [[]]];
   it.each(isNotMultidimensionalCases)(
     'should not be multidimensional',
     (value) => {

@@ -1,8 +1,10 @@
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+
 jest.mock('./execute');
 
-const execute = require('./execute');
-const tested = require('./remove');
-const constants = require('./constants');
+import { execute } from './execute';
+import { batchRemove as tested } from './remove';
+import { constants } from './constants';
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -10,34 +12,13 @@ beforeEach(() => {
 });
 
 describe('batch remove', () => {
-  it('should validate document client', async () => {
-    await expect(tested(null, '', {})).rejects.toThrow(
-      'documentClient is required.'
-    );
-  });
-
-  it('should validate table', async () => {
-    await expect(tested({}, '', {})).rejects.toThrow('tableName is required.');
-  });
-
-  it('should validate key', async () => {
-    await expect(tested({}, 'table')).rejects.toThrow('Key list is required.');
-  });
-
-  it('should validate that keys are objects', async () => {
-    const keys = [{}, 'b'];
-    await expect(tested({}, 'table', keys)).rejects.toThrow(
-      'Keys must be objects.'
-    );
-  });
-
   it('should split keys into chunks of max batch size (batchWrite limit)', async () => {
     const arrayLength = constants.MAX_ITEMS_PER_BATCH_WRITE * 2 + 10;
     const keys = Array.from(Array(arrayLength), (_, index) => ({
       id: index + 1
     }));
 
-    const res = await tested({}, 'testTable', keys);
+    const res = await tested({} as DynamoDBDocument, 'testTable', keys);
 
     expect(execute).toHaveBeenCalledTimes(3);
 

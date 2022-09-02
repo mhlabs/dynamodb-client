@@ -1,5 +1,5 @@
-const tested = require('./filter');
-const testData = require('./filter.test-data.json');
+import * as tested from './filter';
+import * as testData from './filter.test-data.json';
 
 describe('filter duplicates', () => {
   it('should filter out duplicate keys', () => {

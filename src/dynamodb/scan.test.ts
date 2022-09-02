@@ -1,29 +1,29 @@
-const { mockClient } = require('aws-sdk-client-mock');
-const { ScanCommand, DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
+import {
+  DynamoDBDocument,
+  ScanCommand,
+  ScanCommandInput
+} from '@aws-sdk/lib-dynamodb';
+import { mockClient } from 'aws-sdk-client-mock';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
+import { scan as tested } from './scan';
 
-const tested = require('./scan');
+interface DynamoItem {
+  id: number;
+}
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
 });
 
 describe('scan', () => {
-  it('should validate documentClient', async () => {
-    await expect(tested()).rejects.toThrow('documentClient is required.');
-  });
-
-  it('should validate table', async () => {
-    await expect(tested(dynamoDbDocumentMock)).rejects.toThrow(
-      'Table name is required.'
-    );
-  });
-
   it('should return items', async () => {
     dynamoDbDocumentMock.on(ScanCommand).resolves({ Items: [{ id: 5 }] });
 
-    const result = await tested(dynamoDbDocumentMock, 'table');
+    const result = await tested<DynamoItem>(
+      dynamoDbDocumentMock as any,
+      'table'
+    );
 
     expect(dynamoDbDocumentMock.commandCalls(ScanCommand)).toHaveLength(1);
     expect(result).toHaveLength(1);
@@ -32,12 +32,15 @@ describe('scan', () => {
 
   it('should fetch remaining items', async () => {
     dynamoDbDocumentMock
-      .on(ScanCommand, { ExclusiveStartKey: undefined })
-      .resolves({ Items: [{ id: 5 }], LastEvaluatedKey: 'key' })
-      .on(ScanCommand, { ExclusiveStartKey: 'key' })
+      .on(ScanCommand, { ['ExclusiveStartKey' as string]: undefined })
+      .resolves({ Items: [{ id: 5 }], ['LastEvaluatedKey' as string]: 'key' })
+      .on(ScanCommand, { ['ExclusiveStartKey' as string]: 'key' })
       .resolves({ Items: [{ id: 6 }] });
 
-    const result = await tested(dynamoDbDocumentMock, 'table');
+    const result = await tested<DynamoItem>(
+      dynamoDbDocumentMock as any,
+      'table'
+    );
 
     expect(dynamoDbDocumentMock.commandCalls(ScanCommand)).toHaveLength(2);
     expect(result).toHaveLength(2);
@@ -52,9 +55,9 @@ describe('scan', () => {
     const options = {
       Limit: 100,
       ConsistentRead: true
-    };
+    } as ScanCommandInput;
 
-    await tested(dynamoDbDocumentMock, table, options);
+    await tested(dynamoDbDocumentMock as any, table, options);
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(ScanCommand)[0].args[0].input;

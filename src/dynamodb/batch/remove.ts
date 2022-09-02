@@ -1,12 +1,15 @@
-const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+import { BatchWriteCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
-const { chunk } = require('../../array/chunk');
-const constants = require('./constants');
-const execute = require('./execute');
-const parseRetryOptions = require('./retry-options');
-const { filterUniqueKeys } = require('./duplicate-handling/filter');
+import { chunk } from '../../array/chunk';
+import { constants } from './constants';
+import { execute } from './execute';
+import { parseRetryOptions } from './retry-options';
+import { filterUniqueKeys } from './duplicate-handling/filter';
 
-function createBatchDeleteCommand(tableName, batch) {
+const createBatchDeleteCommand = (
+  tableName: string,
+  batch: Record<string, any>[]
+): BatchWriteCommand => {
   const deleteRequests = batch.map((key) => ({
     DeleteRequest: {
       Key: key
@@ -17,24 +20,28 @@ function createBatchDeleteCommand(tableName, batch) {
       [tableName]: deleteRequests
     }
   });
-}
+};
 
-function ensureValidParameters(documentClient, tableName, keys) {
+const ensureValidParameters = (
+  documentClient: DynamoDBDocument,
+  tableName: string,
+  keys: Record<string, any>[]
+) => {
   if (!documentClient) throw new Error('documentClient is required.');
   if (!tableName) throw new Error('tableName is required.');
   if (!keys) throw new Error('Key list is required.');
 
   if (!keys.every((key) => typeof key === 'object'))
     throw new Error('Keys must be objects.');
-}
+};
 
-async function batchRemove(
-  documentClient,
-  tableName,
-  keys,
-  retryTimeoutMinMs,
-  retryTimeoutMaxMs
-) {
+export const batchRemove = async (
+  documentClient: DynamoDBDocument,
+  tableName: string,
+  keys: Record<string, any>[],
+  retryTimeoutMinMs?: number,
+  retryTimeoutMaxMs?: number
+): Promise<boolean> => {
   ensureValidParameters(documentClient, tableName, keys);
 
   if (!keys.length) return true;
@@ -60,6 +67,4 @@ async function batchRemove(
   await Promise.all(runBatches);
 
   return true;
-}
-
-module.exports = batchRemove;
+};

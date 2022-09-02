@@ -1,13 +1,13 @@
-const { mockClient } = require('aws-sdk-client-mock');
-const {
+import { mockClient } from 'aws-sdk-client-mock';
+import {
   BatchGetCommand,
   BatchWriteCommand,
   DynamoDBDocument
-} = require('@aws-sdk/lib-dynamodb');
+} from '@aws-sdk/lib-dynamodb';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-const tested = require('./execute');
+import { execute as tested } from './execute';
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
@@ -51,8 +51,10 @@ describe('execute write', () => {
         })
         .resolves({});
 
+      console.log('This test');
+
       const res = await tested(
-        dynamoDbDocumentMock,
+        dynamoDbDocumentMock as any,
         table,
         writeCommand,
         1,
@@ -72,7 +74,7 @@ describe('execute write', () => {
       });
 
       const res = await tested(
-        dynamoDbDocumentMock,
+        dynamoDbDocumentMock as any,
         table,
         writeCommand,
         1,
@@ -100,7 +102,14 @@ describe('execute write', () => {
       });
 
       await expect(
-        tested(dynamoDbDocumentMock, table, writeCommand, 1, 0, retryOptions)
+        tested(
+          dynamoDbDocumentMock as any,
+          table,
+          writeCommand,
+          1,
+          0,
+          retryOptions
+        )
       ).rejects.toThrow(
         'returned UnprocessedItems after 3 attempts (2 retries)'
       );
@@ -150,7 +159,7 @@ describe('execute get', () => {
         });
 
       const res = await tested(
-        dynamoDbDocumentMock,
+        dynamoDbDocumentMock as any,
         table,
         getCommand,
         1,
@@ -166,14 +175,14 @@ describe('execute get', () => {
 
     it('should not retry if no UnprocessedKeys', async () => {
       dynamoDbDocumentMock.on(BatchGetCommand).resolves({
-        UnprocessedItems: {},
+        ['UnprocessedItems' as string]: {},
         Responses: {
           [table]: keys
         }
       });
 
       const res = await tested(
-        dynamoDbDocumentMock,
+        dynamoDbDocumentMock as any,
         table,
         getCommand,
         1,
@@ -197,7 +206,14 @@ describe('execute get', () => {
       });
 
       await expect(
-        tested(dynamoDbDocumentMock, table, getCommand, 1, 0, retryOptions)
+        tested(
+          dynamoDbDocumentMock as any,
+          table,
+          getCommand,
+          1,
+          0,
+          retryOptions
+        )
       ).rejects.toThrow(
         'returned UnprocessedKeys after 3 attempts (2 retries)'
       );

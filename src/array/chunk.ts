@@ -1,4 +1,4 @@
-function chunk(items, itemsPerChunk) {
+export const chunk = <T>(items: T[], itemsPerChunk: number): T[][] => {
   if (!Array.isArray(items)) {
     throw new Error('Can only chunk arrays');
   }
@@ -7,15 +7,11 @@ function chunk(items, itemsPerChunk) {
   }
 
   const itemsCopy = [...items];
-  const chunkedItems = [];
+  const chunkedItems: T[][] = [];
 
   while (itemsCopy.length) {
     chunkedItems.push(itemsCopy.splice(0, itemsPerChunk));
   }
 
   return chunkedItems;
-}
-
-module.exports = {
-  chunk
 };
