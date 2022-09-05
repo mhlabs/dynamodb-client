@@ -13,7 +13,7 @@
     "strict": true,
     "skipLibCheck": true,
     "declaration": true,
-    "outDir": "dist",
+    "outDir": "./dist",
     "forceConsistentCasingInFileNames": true
   },
   "exclude": ["./dist/**/*", "*.config.ts", "*.test.ts"]

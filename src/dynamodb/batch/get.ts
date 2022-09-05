@@ -14,7 +14,7 @@ import { filterUniqueKeys } from './duplicate-handling/filter';
 const createBatchGetCommand = (
   tableName: string,
   batch: Record<string, any>[],
-  options: Record<string, any>
+  options?: Record<string, any>
 ) => {
   const input: BatchGetCommandInput = {
     RequestItems: {
@@ -44,9 +44,9 @@ export const batchGet = async <T>(
   documentClient: DynamoDBDocument,
   tableName: string,
   keys: Record<string, any>[],
-  options: Record<string, any>,
-  retryTimeoutMinMs: number,
-  retryTimeoutMaxMs: number
+  options?: Record<string, any>,
+  retryTimeoutMinMs?: number,
+  retryTimeoutMaxMs?: number
 ): Promise<T[]> => {
   ensureValidParameters(documentClient, tableName, keys);
 

@@ -1,10 +1,10 @@
-const {
+import {
   DynamoDBClient,
   CreateTableCommand,
   DeleteTableCommand
-} = require('@aws-sdk/client-dynamodb');
+} from '@aws-sdk/client-dynamodb';
 
-const documentClient = require('../index');
+import * as documentClient from '../index';
 
 const tableName = 'table';
 
@@ -67,6 +67,12 @@ const duplicateOptions = {
   }
 };
 
+interface DynamoItem {
+  id: string;
+  city: string;
+  postal: number;
+}
+
 beforeAll(async () => {
   await dynamoClient.send(new CreateTableCommand(tableParams));
 });
@@ -90,53 +96,57 @@ describe('dynamo integration tests', () => {
   });
 
   it('should be able to perform all dynamo operations', async () => {
-    let result = await dynamo.batchWrite(tableName, items, duplicateOptions);
-    expect(result).toBe(true);
+    const result1 = await dynamo.batchWrite(tableName, items, duplicateOptions);
+    expect(result1).toBe(true);
 
-    result = await dynamo.scan(tableName);
-    expect(result).toHaveLength(2);
+    const result2 = await dynamo.scan<DynamoItem>(tableName);
+    expect(result2).toHaveLength(2);
 
-    result = await dynamo.batchRemove(
+    const result3 = await dynamo.batchRemove(
       tableName,
       items.map((i) => ({ id: i.id }))
     );
 
-    expect(result).toBe(true);
+    expect(result3).toBe(true);
 
-    result = await dynamo.scan(tableName);
-    expect(result).toHaveLength(0);
+    const result4 = await dynamo.scan<DynamoItem>(tableName);
+    expect(result4).toHaveLength(0);
 
-    result = await dynamo.batchWrite(tableName, items, duplicateOptions);
-    expect(result).toBe(true);
+    const result5 = await dynamo.batchWrite(tableName, items, duplicateOptions);
+    expect(result5).toBe(true);
 
-    result = await dynamo.batchGet(
+    const result6 = await dynamo.batchGet<DynamoItem>(
       tableName,
       items.map((i) => ({ id: i.id }))
     );
 
-    expect(result).toHaveLength(2);
+    expect(result6).toHaveLength(2);
 
-    result = await dynamo.getItem(tableName, { id: items[1].id });
-    expect(result.city).toBe(items[1].city);
+    const result7 = await dynamo.getItem<DynamoItem>(tableName, {
+      id: items[1].id
+    });
+    expect(result7?.city).toBe(items[1].city);
 
-    result = await dynamo.putItem(tableName, {
+    const result8 = await dynamo.putItem(tableName, {
       id: 'c',
       city: 'cstad',
       postal: 3
     });
-    expect(result).toBe(true);
+    expect(result8).toBe(true);
 
-    result = await dynamo.scan(tableName);
-    expect(result).toHaveLength(3);
+    const result9 = await dynamo.scan(tableName);
+    expect(result9).toHaveLength(3);
 
-    result = await dynamo.query(tableName, { id: items[1].id });
-    expect(result[0].city).toBe(items[1].city);
+    const result10 = await dynamo.query<DynamoItem>(tableName, {
+      id: items[1].id
+    });
+    expect(result10[0].city).toBe(items[1].city);
 
-    result = await dynamo.queryByIndex(
+    const result11 = await dynamo.queryByIndex<DynamoItem>(
       tableName,
       { postal: items[1].postal },
       tableParams.GlobalSecondaryIndexes[0].IndexName
     );
-    expect(result[0].city).toBe(items[1].city);
+    expect(result11[0].city).toBe(items[1].city);
   });
 });

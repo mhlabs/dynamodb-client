@@ -26,22 +26,22 @@ export interface MhDynamoClient {
   batchGet: <T>(
     tableName: string,
     keys: Record<string, any>[],
-    options: Record<string, any>,
-    retryTimeoutMinMs: number,
-    retryTimeoutMaxMs: number
+    options?: Record<string, any>,
+    retryTimeoutMinMs?: number,
+    retryTimeoutMaxMs?: number
   ) => Promise<T[]>;
   batchRemove: (
     tableName: string,
     keys: Record<string, any>[],
-    retryTimeoutMinMs: number,
-    retryTimeoutMaxMs: number
+    retryTimeoutMinMs?: number,
+    retryTimeoutMaxMs?: number
   ) => Promise<boolean>;
   batchWrite: (
     tableName: string,
     keys: Record<string, any>[],
-    options: DuplicateOptions,
-    retryTimeoutMinMs: number,
-    retryTimeoutMaxMs: number
+    options?: DuplicateOptions,
+    retryTimeoutMinMs?: number,
+    retryTimeoutMaxMs?: number
   ) => Promise<boolean>;
   getItem: <T>(
     tableName: string,

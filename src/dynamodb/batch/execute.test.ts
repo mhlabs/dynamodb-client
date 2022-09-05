@@ -51,8 +51,6 @@ describe('execute write', () => {
         })
         .resolves({});
 
-      console.log('This test');
-
       const res = await tested(
         dynamoDbDocumentMock as any,
         table,
@@ -111,7 +109,7 @@ describe('execute write', () => {
           retryOptions
         )
       ).rejects.toThrow(
-        'returned UnprocessedItems after 3 attempts (2 retries)'
+        'Batch: 1 - returned UnprocessedItems after 3 attempts (2 retries)'
       );
 
       expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(

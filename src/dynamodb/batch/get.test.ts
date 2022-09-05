@@ -1,7 +1,7 @@
 jest.mock('./execute');
 
 import { execute } from './execute';
-import { batchRemove as tested } from './remove';
+import { batchGet as tested } from './get';
 import { constants } from './constants';
 
 const executeMock = jest.mocked(execute);
@@ -9,11 +9,12 @@ const executeMock = jest.mocked(execute);
 beforeEach(() => {
   jest.resetAllMocks();
   jest.restoreAllMocks();
+  executeMock.mockResolvedValue([]);
 });
 
-describe('batch remove', () => {
+describe('batch get', () => {
   it('should split keys into chunks of max batch size (batchWrite limit)', async () => {
-    const arrayLength = constants.MAX_ITEMS_PER_BATCH_WRITE * 2 + 10;
+    const arrayLength = constants.MAX_KEYS_PER_BATCH_GET * 2 + 10;
     const keys = Array.from(Array(arrayLength), (_, index) => ({
       id: index + 1
     }));
@@ -24,19 +25,16 @@ describe('batch remove', () => {
 
     const firstRequest = executeMock.mock.calls[0][2].input.RequestItems
       ?.testTable as any;
-    expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
-    expect(firstRequest.every((item) => item.DeleteRequest)).toBeTruthy();
+    expect(firstRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
     const secondRequest = executeMock.mock.calls[1][2].input.RequestItems
       ?.testTable as any;
-    expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
-    expect(secondRequest.every((item) => item.DeleteRequest)).toBeTruthy();
+    expect(secondRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
     const thirdRequest = executeMock.mock.calls[2][2].input.RequestItems
       ?.testTable as any;
-    expect(thirdRequest).toHaveLength(10);
-    expect(thirdRequest.every((item) => item.DeleteRequest)).toBeTruthy();
+    expect(thirdRequest.Keys).toHaveLength(10);
 
-    expect(res).toBe(true);
+    expect(res).toEqual([]);
   });
 });

@@ -43,9 +43,9 @@ export const batchWrite = async (
   documentClient: DynamoDBDocument,
   tableName: string,
   items: Record<string, any>[],
-  options: DuplicateOptions,
-  retryTimeoutMinMs: number,
-  retryTimeoutMaxMs: number
+  options?: DuplicateOptions,
+  retryTimeoutMinMs?: number,
+  retryTimeoutMaxMs?: number
 ): Promise<boolean> => {
   ensureValidParameters(documentClient, tableName, items);
 

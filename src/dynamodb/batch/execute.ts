@@ -13,55 +13,39 @@ import { RetryOptions } from './retry-options';
 const needsRetry = (
   response: BatchGetCommandOutput | BatchWriteCommandOutput
 ): boolean => {
-  if (response as BatchGetCommandOutput) {
-    const getResponse = response as BatchGetCommandOutput;
-    return (
-      (getResponse?.UnprocessedKeys || false) &&
-      Object.keys(getResponse?.UnprocessedKeys).length > 0
-    );
-  }
+  const hasUnprocessedKeys =
+    'UnprocessedKeys' in response &&
+    !!response?.UnprocessedKeys &&
+    Object.keys(response.UnprocessedKeys).length > 0;
 
-  if (response as BatchWriteCommandOutput) {
-    const writeResponse = response as BatchWriteCommandOutput;
-    return (
-      (writeResponse?.UnprocessedItems || false) &&
-      Object.keys(writeResponse?.UnprocessedItems).length > 0
-    );
-  }
+  const hasUnprocessedItems =
+    'UnprocessedItems' in response &&
+    !!response?.UnprocessedItems &&
+    Object.keys(response.UnprocessedItems).length > 0;
 
-  throw new Error('Unsupported batch command response');
+  return hasUnprocessedKeys || hasUnprocessedItems;
 };
 
 const getUnprocessedPropertyNameFromResponse = (
   response: BatchGetCommandOutput | BatchWriteCommandOutput
 ) => {
-  if (response as BatchGetCommandOutput) return 'UnprocessedKeys';
-  if (response as BatchWriteCommandOutput) return 'UnprocessedItems';
-  return 'Unsupported batch command response';
+  if ('UnprocessedKeys' in response) return 'UnprocessedKeys';
+  if ('UnprocessedItems' in response) return 'UnprocessedItems';
+  return 'Unsupported batch command response when getting property name from response';
 };
 
 const createRetryCommandFromResponse = (
   response: BatchGetCommandOutput | BatchWriteCommandOutput
 ) => {
-  if (response as BatchGetCommandOutput) {
-    const getResponse = response as BatchGetCommandOutput;
-    if (!getResponse.UnprocessedKeys) {
-      throw new Error('Retry called without unprocessed keys');
-    }
-
-    return new BatchGetCommand({ RequestItems: getResponse.UnprocessedKeys });
-  } else if (response as BatchWriteCommandOutput) {
-    const writeResponse = response as BatchWriteCommandOutput;
-    if (!writeResponse.UnprocessedItems) {
-      throw new Error('Retry called without unprocessed items');
-    }
-
-    return new BatchWriteCommand({
-      RequestItems: writeResponse.UnprocessedItems
-    });
+  if ('UnprocessedKeys' in response && response?.UnprocessedKeys) {
+    return new BatchGetCommand({ RequestItems: response.UnprocessedKeys });
+  } else if ('UnprocessedItems' in response && response?.UnprocessedItems) {
+    return new BatchWriteCommand({ RequestItems: response.UnprocessedItems });
   }
 
-  throw new Error('Unsupported batch command response');
+  throw new Error(
+    'Unsupported batch command response when creating retry command'
+  );
 };
 
 const retryUnprocessedItems = async <T>(
@@ -117,31 +101,18 @@ export const execute = async <T>(
   retryOptions: RetryOptions,
   previousItems: T[] = []
 ): Promise<T[]> => {
-  console.log('Execute called with items', { previousItems });
   let items: T[] = [...previousItems];
-  let response: BatchGetCommandOutput | BatchWriteCommandOutput;
 
-  if (batchCommand as BatchGetCommand) {
-    const batchGet = batchCommand as BatchGetCommand;
-    const getResponse = await documentClient.send(batchGet);
+  const response: BatchGetCommandOutput | BatchWriteCommandOutput =
+    await documentClient.send(batchCommand as any);
 
-    if (getResponse.Responses && getResponse.Responses[tableName]) {
-      items.push(...(getResponse.Responses[tableName] as T[]));
+  if ('Responses' in response) {
+    if (response.Responses && response.Responses[tableName]) {
+      items.push(...(response.Responses[tableName] as T[]));
     }
-
-    response = getResponse;
-  } else if (batchCommand as BatchWriteCommand) {
-    const batchWrite = batchCommand as BatchWriteCommand;
-
-    response = await documentClient.send(batchWrite);
-  } else {
-    throw new Error('Unsupported batch command');
   }
 
   if (!needsRetry(response)) return items;
-
-  console.log('Needs retry');
-
   items = await retryUnprocessedItems<T>(
     documentClient,
     tableName,

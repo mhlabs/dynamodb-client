@@ -1,8 +1,8 @@
 export interface DuplicateOptions {
   duplicateConfig: {
     partitionKeyAttributeName: string;
-    sortKeyAttributeName: string;
-    versionAttributeName: string;
+    sortKeyAttributeName?: string;
+    versionAttributeName?: string;
   };
 }
 
