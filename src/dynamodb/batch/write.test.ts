@@ -1,14 +1,15 @@
-jest.mock('./execute');
-
-import { execute } from './execute';
-import { batchWrite as tested } from './write';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { MhDynamoClient } from '../../..';
 import { constants } from './constants';
 
-const executeMock = jest.mocked(execute);
+const executeMock = jest.fn();
+let client: MhDynamoClient;
 
 beforeEach(() => {
   jest.resetAllMocks();
   jest.restoreAllMocks();
+  client = MhDynamoClient.fromDocumentClient({} as unknown as DynamoDBDocument);
+  client.execute = executeMock;
 });
 
 describe('batchWrite', () => {
@@ -18,26 +19,30 @@ describe('batchWrite', () => {
       id: index + 1
     }));
 
-    const res = await tested({} as any, 'testTable', items, {
-      duplicateConfig: {
-        partitionKeyAttributeName: 'id'
+    const result = await client.batchWrite({
+      tableName: 'testTable',
+      items,
+      options: {
+        duplicateConfig: {
+          partitionKeyAttributeName: 'id'
+        }
       }
     });
 
     expect(executeMock).toHaveBeenCalledTimes(3);
 
     const firstRequest =
-      executeMock.mock.calls[0][2].input.RequestItems?.testTable;
+      executeMock.mock.calls[0][0].batchCommand.input.RequestItems?.testTable;
     expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
 
     const secondRequest =
-      executeMock.mock.calls[1][2].input.RequestItems?.testTable;
+      executeMock.mock.calls[1][0].batchCommand.input.RequestItems?.testTable;
     expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
 
     const thirdRequest =
-      executeMock.mock.calls[2][2].input.RequestItems?.testTable;
+      executeMock.mock.calls[2][0].batchCommand.input.RequestItems?.testTable;
     expect(thirdRequest).toHaveLength(10);
 
-    expect(res).toBe(true);
+    expect(result).toBe(true);
   });
 });

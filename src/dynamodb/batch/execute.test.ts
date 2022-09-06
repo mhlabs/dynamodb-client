@@ -1,16 +1,20 @@
-import { mockClient } from 'aws-sdk-client-mock';
 import {
   BatchGetCommand,
   BatchWriteCommand,
   DynamoDBDocument
 } from '@aws-sdk/lib-dynamodb';
+import { mockClient } from 'aws-sdk-client-mock';
+import { MhDynamoClient } from '../../..';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-import { execute as tested } from './execute';
+let client: MhDynamoClient;
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
+  client = MhDynamoClient.fromDocumentClient(
+    dynamoDbDocumentMock as unknown as DynamoDBDocument
+  );
 });
 
 const table = 'testTable';
@@ -51,14 +55,14 @@ describe('execute write', () => {
         })
         .resolves({});
 
-      const res = await tested(
-        dynamoDbDocumentMock as any,
-        table,
-        writeCommand,
-        1,
-        0,
-        retryOptions
-      );
+      const res = await client.execute({
+        tableName: table,
+        batchCommand: writeCommand,
+        batchNo: 1,
+        retryCount: 0,
+        retryOptions,
+        previousItems: []
+      });
 
       expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
         2
@@ -71,14 +75,14 @@ describe('execute write', () => {
         UnprocessedItems: {}
       });
 
-      const res = await tested(
-        dynamoDbDocumentMock as any,
-        table,
-        writeCommand,
-        1,
-        0,
-        retryOptions
-      );
+      const res = await client.execute({
+        tableName: table,
+        batchCommand: writeCommand,
+        batchNo: 1,
+        retryCount: 0,
+        retryOptions,
+        previousItems: []
+      });
 
       expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
         1
@@ -100,14 +104,14 @@ describe('execute write', () => {
       });
 
       await expect(
-        tested(
-          dynamoDbDocumentMock as any,
-          table,
-          writeCommand,
-          1,
-          0,
-          retryOptions
-        )
+        client.execute({
+          tableName: table,
+          batchCommand: writeCommand,
+          batchNo: 1,
+          retryCount: 0,
+          retryOptions,
+          previousItems: []
+        })
       ).rejects.toThrow(
         'Batch: 1 - returned UnprocessedItems after 3 attempts (2 retries)'
       );
@@ -156,14 +160,14 @@ describe('execute get', () => {
           }
         });
 
-      const res = await tested(
-        dynamoDbDocumentMock as any,
-        table,
-        getCommand,
-        1,
-        0,
-        retryOptions
-      );
+      const res = await client.execute({
+        tableName: table,
+        batchCommand: getCommand,
+        batchNo: 1,
+        retryCount: 0,
+        retryOptions,
+        previousItems: []
+      });
 
       expect(dynamoDbDocumentMock.commandCalls(BatchGetCommand)).toHaveLength(
         2
@@ -179,14 +183,14 @@ describe('execute get', () => {
         }
       });
 
-      const res = await tested(
-        dynamoDbDocumentMock as any,
-        table,
-        getCommand,
-        1,
-        0,
-        retryOptions
-      );
+      const res = await client.execute({
+        tableName: table,
+        batchCommand: getCommand,
+        batchNo: 1,
+        retryCount: 0,
+        retryOptions,
+        previousItems: []
+      });
 
       expect(dynamoDbDocumentMock.commandCalls(BatchGetCommand)).toHaveLength(
         1
@@ -204,14 +208,14 @@ describe('execute get', () => {
       });
 
       await expect(
-        tested(
-          dynamoDbDocumentMock as any,
-          table,
-          getCommand,
-          1,
-          0,
-          retryOptions
-        )
+        client.execute({
+          tableName: table,
+          batchCommand: getCommand,
+          batchNo: 1,
+          retryCount: 0,
+          retryOptions,
+          previousItems: []
+        })
       ).rejects.toThrow(
         'returned UnprocessedKeys after 3 attempts (2 retries)'
       );

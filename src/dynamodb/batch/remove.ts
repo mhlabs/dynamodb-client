@@ -1,10 +1,20 @@
-import { BatchWriteCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
+import {
+  BaseInput,
+  BatchRetryInput,
+  MhDynamoClient,
+  MultiItemInput
+} from '../../..';
 import { chunk } from '../../array/chunk';
 import { constants } from './constants';
-import { execute } from './execute';
-import { parseRetryOptions } from './retry-options';
 import { filterUniqueKeys } from './duplicate-handling/filter';
+import { parseRetryOptions } from './retry-options';
+
+export interface BatchRemoveInput
+  extends BaseInput,
+    BatchRetryInput,
+    Omit<MultiItemInput, 'items'> {}
 
 const createBatchDeleteCommand = (
   tableName: string,
@@ -22,49 +32,36 @@ const createBatchDeleteCommand = (
   });
 };
 
-const ensureValidParameters = (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  keys: Record<string, any>[]
-) => {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('tableName is required.');
-  if (!keys) throw new Error('Key list is required.');
+export async function batchRemove(
+  this: MhDynamoClient,
+  input: BatchRemoveInput
+): Promise<boolean> {
+  this.ensureValidBatch(input.tableName, input.keys);
 
-  if (!keys.every((key) => typeof key === 'object'))
-    throw new Error('Keys must be objects.');
-};
+  if (!input.keys.length) return true;
 
-export const batchRemove = async (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  keys: Record<string, any>[],
-  retryTimeoutMinMs?: number,
-  retryTimeoutMaxMs?: number
-): Promise<boolean> => {
-  ensureValidParameters(documentClient, tableName, keys);
-
-  if (!keys.length) return true;
-
-  const uniqueKeys = filterUniqueKeys(keys);
+  const uniqueKeys = filterUniqueKeys(input.keys);
   const chunkedItems = chunk(uniqueKeys, constants.MAX_ITEMS_PER_BATCH_WRITE);
 
-  const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
+  const retryOptions = parseRetryOptions(
+    input.retryTimeoutMinMs,
+    input.retryTimeoutMaxMs
+  );
 
   const runBatches = chunkedItems.map((batch, index) => {
-    const batchWriteCommand = createBatchDeleteCommand(tableName, batch);
+    const batchWriteCommand = createBatchDeleteCommand(input.tableName, batch);
 
-    return execute(
-      documentClient,
-      tableName,
-      batchWriteCommand,
-      index + 1,
-      0,
-      retryOptions
-    );
+    return this.execute({
+      tableName: input.tableName,
+      batchCommand: batchWriteCommand,
+      batchNo: index + 1,
+      retryCount: 0,
+      retryOptions,
+      previousItems: []
+    });
   });
 
   await Promise.all(runBatches);
 
   return true;
-};
+}

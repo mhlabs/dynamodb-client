@@ -1,16 +1,21 @@
-import { mockClient } from 'aws-sdk-client-mock';
 import {
-  PutCommand,
   DynamoDBDocument,
+  PutCommand,
   PutCommandInput
 } from '@aws-sdk/lib-dynamodb';
+import { mockClient } from 'aws-sdk-client-mock';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-import { putItem as tested } from './put-item';
+import { MhDynamoClient } from '../..';
+
+let client: MhDynamoClient;
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
+  client = MhDynamoClient.fromDocumentClient(
+    dynamoDbDocumentMock as unknown as DynamoDBDocument
+  );
 });
 
 describe('put', () => {
@@ -21,12 +26,11 @@ describe('put', () => {
     } as PutCommandInput;
     const item = { Id: 'x' };
 
-    const result = await tested(
-      dynamoDbDocumentMock as any,
-      table,
+    const result = await client.putItem({
+      tableName: table,
       item,
       options
-    );
+    });
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(PutCommand)[0].args[0].input;

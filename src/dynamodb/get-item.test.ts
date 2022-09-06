@@ -1,31 +1,44 @@
+import { DynamoDBDocument, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
-import { GetCommand, DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-import { getItem as tested } from './get-item';
 import { GetItemCommandInput } from '@aws-sdk/client-dynamodb';
+
+import { MhDynamoClient } from '../..';
+
+let client: MhDynamoClient;
+
+interface DynamoItem {
+  Id: number;
+}
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
+  client = MhDynamoClient.fromDocumentClient(
+    dynamoDbDocumentMock as unknown as DynamoDBDocument
+  );
 });
 
 describe('get-item', () => {
   it('should return item', async () => {
     dynamoDbDocumentMock.on(GetCommand).resolves({ Item: { Id: 5 } });
 
-    const result = await tested<{ Id: number }>(
-      dynamoDbDocumentMock as any,
-      'table',
-      {}
-    );
+    const result = await client.getItem<DynamoItem>({
+      tableName: 'table',
+      key: {}
+    });
+
     expect(result?.Id).toEqual(5);
   });
 
   it('should handle null repsonse', async () => {
     dynamoDbDocumentMock.on(GetCommand).resolves(null as any);
 
-    const result = await tested(dynamoDbDocumentMock as any, 'table', {});
+    const result = await client.getItem<DynamoItem>({
+      tableName: 'table',
+      key: {}
+    });
     expect(result).toBeNull();
   });
 
@@ -37,7 +50,11 @@ describe('get-item', () => {
       ConsistentRead: true
     } as GetItemCommandInput;
 
-    await tested(dynamoDbDocumentMock as any, table, key, options);
+    await client.getItem<DynamoItem>({
+      tableName: table,
+      key,
+      options
+    });
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(GetCommand)[0].args[0].input;

@@ -1,8 +1,10 @@
-import {
-  DynamoDBDocument,
-  QueryCommand,
-  QueryCommandInput
-} from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import { BaseInput, MhDynamoClient } from '../..';
+
+export interface QueryInput extends BaseInput {
+  keyCondition: Record<string, any>;
+  indexName: string;
+}
 
 const generateKeyCondition = (
   attributeUpdates: Record<string, any>
@@ -35,43 +37,35 @@ const generateKeyCondition = (
   } as QueryCommandInput;
 };
 
-const ensureValidParameters = (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  keyCondition: Record<string, any>,
-  indexQuery: boolean,
-  indexName?: string
-) => {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('table name is required.');
-  if (indexQuery && !indexName) throw new Error('indexName is required.');
-  if (!keyCondition) throw new Error('keyCondition is required.');
-  if (typeof keyCondition !== 'object')
-    throw new Error('keyCondition should be an object.');
+const createCommand = (input: QueryInput) => {
+  const commandInput = generateKeyCondition(input.keyCondition);
+  commandInput.TableName = input.tableName;
+
+  if (input.indexName) commandInput.IndexName = input.indexName;
+
+  return new QueryCommand(commandInput);
 };
 
-export const query = async <T>(
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  keyCondition: Record<string, any>,
-  indexQuery = false,
-  indexName?: string
-): Promise<T[]> => {
-  ensureValidParameters(
-    documentClient,
-    tableName,
-    keyCondition,
-    indexQuery,
-    indexName
-  );
+export async function query<T>(
+  this: MhDynamoClient,
+  input: Omit<QueryInput, 'indexName'>
+): Promise<T[]> {
+  this.ensureValid(input.tableName, input.keyCondition, 'keyCondition');
 
-  const input = generateKeyCondition(keyCondition);
-
-  input.TableName = tableName;
-  if (indexName) input.IndexName = indexName;
-
-  const command = new QueryCommand(input);
-  const data = await documentClient.send(command);
+  const command = createCommand({ ...input, indexName: '' });
+  const data = await this.documentClient.send(command);
 
   return data.Items as T[];
-};
+}
+
+export async function queryByIndex<T>(
+  this: MhDynamoClient,
+  input: QueryInput
+): Promise<T[]> {
+  this.ensureValidQuery(input.tableName, input.keyCondition, input.indexName);
+
+  const command = createCommand(input);
+  const data = await this.documentClient.send(command);
+
+  return data.Items as T[];
+}

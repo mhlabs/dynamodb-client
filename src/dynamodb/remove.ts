@@ -1,36 +1,24 @@
-import {
-  DeleteCommand,
-  DeleteCommandInput,
-  DynamoDBDocument
-} from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DeleteCommandInput } from '@aws-sdk/lib-dynamodb';
+import { BaseInput, MhDynamoClient, SingleItemInput } from '../../index';
 
-const ensureValidParameters = (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  key: Record<string, any>
-) => {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('tableName is required.');
-  if (!key) throw new Error('key is required.');
-  if (typeof key !== 'object') throw new Error('key should be an object.');
-};
+export interface RemoveInput extends BaseInput, Omit<SingleItemInput, 'item'> {
+  options?: DeleteCommandInput;
+}
 
-export const remove = async (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  key: Record<string, any>,
-  options?: DeleteCommandInput
-) => {
-  ensureValidParameters(documentClient, tableName, key);
+export async function remove(
+  this: MhDynamoClient,
+  input: RemoveInput
+): Promise<boolean> {
+  this.ensureValid(input.tableName, input.key, 'key');
 
-  const input: DeleteCommandInput = {
-    TableName: tableName,
-    Key: key,
-    ...options
+  const cmdInput: DeleteCommandInput = {
+    TableName: input.tableName,
+    Key: input.key,
+    ...input.options
   };
 
-  const deleteCommand = new DeleteCommand(input);
-  await documentClient.send(deleteCommand);
+  const deleteCommand = new DeleteCommand(cmdInput);
+  await this.documentClient.send(deleteCommand);
 
   return true;
-};
+}

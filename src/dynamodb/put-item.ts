@@ -1,36 +1,21 @@
-import {
-  DynamoDBDocument,
-  PutCommand,
-  PutCommandInput
-} from '@aws-sdk/lib-dynamodb';
+import { PutCommand, PutCommandInput } from '@aws-sdk/lib-dynamodb';
+import { BaseInput, MhDynamoClient, SingleItemInput } from '../../index';
 
-const ensureValidParameters = (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  item: Record<string, any>
-) => {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('tableName is required.');
-  if (!item) throw new Error('item is required.');
-  if (typeof item !== 'object') throw new Error('item should be an object.');
-};
+export interface PutInput extends BaseInput, Omit<SingleItemInput, 'key'> {
+  options?: PutCommandInput;
+}
 
-export const putItem = async (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  item: Record<string, any>,
-  options?: PutCommandInput
-) => {
-  ensureValidParameters(documentClient, tableName, item);
+export async function putItem(this: MhDynamoClient, input: PutInput) {
+  this.ensureValid(input.tableName, input.item, 'item');
 
-  const input: PutCommandInput = {
-    TableName: tableName,
-    Item: item,
-    ...options
+  const cmdInput: PutCommandInput = {
+    TableName: input.tableName,
+    Item: input.item,
+    ...input.options
   };
 
-  const command = new PutCommand(input);
-  await documentClient.send(command);
+  const command = new PutCommand(cmdInput);
+  await this.documentClient.send(command);
 
   return true;
-};
+}

@@ -6,7 +6,7 @@
 /** @type {import('@jest/types').Config.InitialOptions} */
 const config = {
   transform: {
-    '^.+\\.(ts|tsx)$': ['esbuild-jest', { sourcemap: true }]
+    '^.+\\.ts?$': ['jest-esbuild', { sourcemap: true }]
   },
   clearMocks: true,
   testMatch: ['**/*.test.ts'],
@@ -15,8 +15,7 @@ const config = {
   coverageReporters: ['json-summary', 'lcov'],
   coverageProvider: 'v8',
   collectCoverageFrom: ['src/**/*.ts', '!src/**/types.ts'],
-  setupFilesAfterEnv: ['./jest-set-env.js'],
-  testEnvironment: 'node'
+  setupFilesAfterEnv: ['./jest-set-env.js']
 };
 
 module.exports = config;

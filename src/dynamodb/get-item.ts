@@ -1,36 +1,24 @@
-import {
-  DynamoDBDocument,
-  GetCommand,
-  GetCommandInput
-} from '@aws-sdk/lib-dynamodb';
+import { GetCommand, GetCommandInput } from '@aws-sdk/lib-dynamodb';
+import { BaseInput, MhDynamoClient, SingleItemInput } from '../../index';
 
-const ensureValidParameters = (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  key: Record<string, any>
-) => {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('tableName is required.');
-  if (!key) throw new Error('key is required.');
-  if (typeof key !== 'object') throw new Error('key should be an object.');
-};
+export interface GetInput extends BaseInput, Omit<SingleItemInput, 'item'> {
+  options?: GetCommandInput;
+}
 
-export const getItem = async <T>(
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  key: Record<string, any>,
-  options?: GetCommandInput
-): Promise<T | null> => {
-  ensureValidParameters(documentClient, tableName, key);
+export async function getItem<T>(
+  this: MhDynamoClient,
+  input: GetInput
+): Promise<T | null> {
+  this.ensureValid(input.tableName, input.key, 'key');
 
-  const input: GetCommandInput = {
-    TableName: tableName,
-    Key: key,
-    ...options
+  const cmdInput: GetCommandInput = {
+    TableName: input.tableName,
+    Key: input.key,
+    ...input.options
   };
 
-  const command = new GetCommand(input);
-  const response = await documentClient.send(command);
+  const command = new GetCommand(cmdInput);
+  const response = await this.documentClient.send(command);
 
   return (response?.Item as T) || null;
-};
+}

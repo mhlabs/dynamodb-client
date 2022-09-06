@@ -1,14 +1,15 @@
-jest.mock('./execute');
-
-import { execute } from './execute';
-import { batchRemove as tested } from './remove';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { MhDynamoClient } from '../../..';
 import { constants } from './constants';
 
-const executeMock = jest.mocked(execute);
+const executeMock = jest.fn();
+let client: MhDynamoClient;
 
 beforeEach(() => {
   jest.resetAllMocks();
   jest.restoreAllMocks();
+  client = MhDynamoClient.fromDocumentClient({} as unknown as DynamoDBDocument);
+  client.execute = executeMock;
 });
 
 describe('batch remove', () => {
@@ -18,25 +19,28 @@ describe('batch remove', () => {
       id: index + 1
     }));
 
-    const res = await tested({} as any, 'testTable', keys);
+    const result = await client.batchRemove({
+      tableName: 'testTable',
+      keys
+    });
 
     expect(executeMock).toHaveBeenCalledTimes(3);
 
-    const firstRequest = executeMock.mock.calls[0][2].input.RequestItems
-      ?.testTable as any;
+    const firstRequest = executeMock.mock.calls[0][0].batchCommand.input
+      .RequestItems?.testTable as any;
     expect(firstRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
     expect(firstRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 
-    const secondRequest = executeMock.mock.calls[1][2].input.RequestItems
-      ?.testTable as any;
+    const secondRequest = executeMock.mock.calls[1][0].batchCommand.input
+      .RequestItems?.testTable as any;
     expect(secondRequest).toHaveLength(constants.MAX_ITEMS_PER_BATCH_WRITE);
     expect(secondRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 
-    const thirdRequest = executeMock.mock.calls[2][2].input.RequestItems
-      ?.testTable as any;
+    const thirdRequest = executeMock.mock.calls[2][0].batchCommand.input
+      .RequestItems?.testTable as any;
     expect(thirdRequest).toHaveLength(10);
     expect(thirdRequest.every((item) => item.DeleteRequest)).toBeTruthy();
 
-    expect(res).toBe(true);
+    expect(result).toBe(true);
   });
 });

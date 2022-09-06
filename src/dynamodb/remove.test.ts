@@ -1,16 +1,20 @@
-import { mockClient } from 'aws-sdk-client-mock';
 import {
   DeleteCommand,
   DeleteCommandInput,
   DynamoDBDocument
 } from '@aws-sdk/lib-dynamodb';
+import { mockClient } from 'aws-sdk-client-mock';
+import { MhDynamoClient } from '../..';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-import { remove as tested } from './remove';
+let client: MhDynamoClient;
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
+  client = MhDynamoClient.fromDocumentClient(
+    dynamoDbDocumentMock as unknown as DynamoDBDocument
+  );
 });
 
 describe('remove', () => {
@@ -21,12 +25,11 @@ describe('remove', () => {
     } as DeleteCommandInput;
     const key = { Id: 'x' };
 
-    const result = await tested(
-      dynamoDbDocumentMock as any,
-      table,
+    const result = await client.remove({
       key,
+      tableName: table,
       options
-    );
+    });
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(DeleteCommand)[0].args[0].input;

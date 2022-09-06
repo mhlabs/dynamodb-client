@@ -6,7 +6,10 @@ import {
 import { mockClient } from 'aws-sdk-client-mock';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
-import { scan as tested } from './scan';
+
+import { MhDynamoClient } from '../..';
+
+let client: MhDynamoClient;
 
 interface DynamoItem {
   id: number;
@@ -14,16 +17,18 @@ interface DynamoItem {
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
+  client = MhDynamoClient.fromDocumentClient(
+    dynamoDbDocumentMock as unknown as DynamoDBDocument
+  );
 });
 
 describe('scan', () => {
   it('should return items', async () => {
     dynamoDbDocumentMock.on(ScanCommand).resolves({ Items: [{ id: 5 }] });
 
-    const result = await tested<DynamoItem>(
-      dynamoDbDocumentMock as any,
-      'table'
-    );
+    const result = await client.scan<DynamoItem>({
+      tableName: 'table'
+    });
 
     expect(dynamoDbDocumentMock.commandCalls(ScanCommand)).toHaveLength(1);
     expect(result).toHaveLength(1);
@@ -37,10 +42,9 @@ describe('scan', () => {
       .on(ScanCommand, { ['ExclusiveStartKey' as string]: 'key' })
       .resolves({ Items: [{ id: 6 }] });
 
-    const result = await tested<DynamoItem>(
-      dynamoDbDocumentMock as any,
-      'table'
-    );
+    const result = await client.scan<DynamoItem>({
+      tableName: 'table'
+    });
 
     expect(dynamoDbDocumentMock.commandCalls(ScanCommand)).toHaveLength(2);
     expect(result).toHaveLength(2);
@@ -57,7 +61,10 @@ describe('scan', () => {
       ConsistentRead: true
     } as ScanCommandInput;
 
-    await tested(dynamoDbDocumentMock as any, table, options);
+    await client.scan<DynamoItem>({
+      tableName: table,
+      options
+    });
 
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(ScanCommand)[0].args[0].input;

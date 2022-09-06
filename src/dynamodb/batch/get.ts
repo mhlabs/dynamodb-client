@@ -1,15 +1,23 @@
-import {
-  BatchGetCommand,
-  BatchGetCommandInput,
-  DynamoDBDocument
-} from '@aws-sdk/lib-dynamodb';
+import { BatchGetCommand, BatchGetCommandInput } from '@aws-sdk/lib-dynamodb';
 
 import { chunk } from '../../array/chunk';
 import { constants } from './constants';
 
-import { execute } from './execute';
-import { parseRetryOptions } from './retry-options';
+import {
+  BaseInput,
+  BatchRetryInput,
+  MhDynamoClient,
+  MultiItemInput
+} from '../../..';
 import { filterUniqueKeys } from './duplicate-handling/filter';
+import { parseRetryOptions } from './retry-options';
+
+export interface BatchGetInput
+  extends BaseInput,
+    BatchRetryInput,
+    Omit<MultiItemInput, 'items'> {
+  options?: Record<string, any>;
+}
 
 const createBatchGetCommand = (
   tableName: string,
@@ -28,45 +36,36 @@ const createBatchGetCommand = (
   return new BatchGetCommand(input);
 };
 
-const ensureValidParameters = (
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  keys: Record<string, any>[]
-) => {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('tableName is required.');
-  if (!keys) throw new Error('Key list is required.');
-  if (!keys.every((key) => typeof key === 'object'))
-    throw new Error('All keys should be objects.');
-};
+export async function batchGet<T>(
+  this: MhDynamoClient,
+  input: BatchGetInput
+): Promise<T[]> {
+  this.ensureValidBatch(input.tableName, input.keys);
 
-export const batchGet = async <T>(
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  keys: Record<string, any>[],
-  options?: Record<string, any>,
-  retryTimeoutMinMs?: number,
-  retryTimeoutMaxMs?: number
-): Promise<T[]> => {
-  ensureValidParameters(documentClient, tableName, keys);
+  if (!input.keys.length) return [];
 
-  if (!keys.length) return [];
-
-  const uniqueKeys = filterUniqueKeys(keys);
+  const uniqueKeys = filterUniqueKeys(input.keys);
   const chunkedItems = chunk(uniqueKeys, constants.MAX_KEYS_PER_BATCH_GET);
 
-  const retryOptions = parseRetryOptions(retryTimeoutMinMs, retryTimeoutMaxMs);
+  const retryOptions = parseRetryOptions(
+    input.retryTimeoutMinMs,
+    input.retryTimeoutMaxMs
+  );
 
   const runBatches = chunkedItems.map((batch, index) => {
-    const batchGetCommand = createBatchGetCommand(tableName, batch, options);
-    return execute<T>(
-      documentClient,
-      tableName,
-      batchGetCommand,
-      index + 1,
-      0,
-      retryOptions
+    const batchGetCommand = createBatchGetCommand(
+      input.tableName,
+      batch,
+      input.options
     );
+    return this.execute<T>({
+      tableName: input.tableName,
+      batchCommand: batchGetCommand,
+      batchNo: index + 1,
+      retryCount: 0,
+      retryOptions,
+      previousItems: []
+    });
   });
 
   const responses = await Promise.all(runBatches);
@@ -75,4 +74,4 @@ export const batchGet = async <T>(
   responses.forEach((response) => items.push(...response));
 
   return items;
-};
+}

@@ -3,157 +3,151 @@ import {
   DynamoDBClient,
   DynamoDBClientConfig
 } from '@aws-sdk/client-dynamodb';
-import {
-  DeleteCommandInput,
-  DynamoDBDocument,
-  GetCommandInput,
-  PutCommandInput,
-  ScanCommandInput,
-  TranslateConfig
-} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocument, TranslateConfig } from '@aws-sdk/lib-dynamodb';
 
+import { isMultidimensional } from './src/array/isMultidimensional';
+import { execute, retryUnprocessedItems } from './src/dynamodb/batch/execute';
 import { batchGet } from './src/dynamodb/batch/get';
 import { batchRemove } from './src/dynamodb/batch/remove';
 import { batchWrite } from './src/dynamodb/batch/write';
 import { getItem } from './src/dynamodb/get-item';
 import { putItem } from './src/dynamodb/put-item';
+import { query, queryByIndex } from './src/dynamodb/query';
 import { remove } from './src/dynamodb/remove';
-import { query } from './src/dynamodb/query';
 import { scan } from './src/dynamodb/scan';
-import { DuplicateOptions } from './src/dynamodb/batch/duplicate-handling/filter';
 
-export interface MhDynamoClient {
-  batchGet: <T>(
-    tableName: string,
-    keys: Record<string, any>[],
-    options?: Record<string, any>,
-    retryTimeoutMinMs?: number,
-    retryTimeoutMaxMs?: number
-  ) => Promise<T[]>;
-  batchRemove: (
-    tableName: string,
-    keys: Record<string, any>[],
-    retryTimeoutMinMs?: number,
-    retryTimeoutMaxMs?: number
-  ) => Promise<boolean>;
-  batchWrite: (
-    tableName: string,
-    keys: Record<string, any>[],
-    options?: DuplicateOptions,
-    retryTimeoutMinMs?: number,
-    retryTimeoutMaxMs?: number
-  ) => Promise<boolean>;
-  getItem: <T>(
-    tableName: string,
-    key: Record<string, any>,
-    options?: GetCommandInput
-  ) => Promise<T | null>;
-  putItem: (
-    tableName: string,
-    item: Record<string, any>,
-    options?: PutCommandInput
-  ) => Promise<boolean>;
-  query: <T>(
-    tableName: string,
-    keyCondition: Record<string, any>
-  ) => Promise<T[]>;
-  queryByIndex: <T>(
-    tableName: string,
-    keyCondition: Record<string, any>,
-    indexName?: string
-  ) => Promise<T[]>;
-  remove: (
-    tableName: string,
-    key: Record<string, any>,
-    options?: DeleteCommandInput
-  ) => Promise<boolean>;
-  scan: <T>(tableName: string, options?: ScanCommandInput) => Promise<T[]>;
+export interface MhDynamoClientOptions {
+  translateConfig?: TranslateConfig;
+  tableName?: string;
 }
 
-const createDynamoClient = (documentClient): MhDynamoClient => {
-  return {
-    batchGet: (
-      tableName,
-      keys,
-      options,
-      retryTimeoutMinMs,
-      retryTimeoutMaxMs
-    ) =>
-      batchGet(
-        documentClient,
-        tableName,
-        keys,
-        options,
-        retryTimeoutMinMs,
-        retryTimeoutMaxMs
-      ),
-    batchRemove: (tableName, keys, retryTimeoutMinMs, retryTimeoutMaxMs) =>
-      batchRemove(
-        documentClient,
-        tableName,
-        keys,
-        retryTimeoutMinMs,
-        retryTimeoutMaxMs
-      ),
-    batchWrite: (
-      tableName,
-      items,
-      options,
-      retryTimeoutMinMs,
-      retryTimeoutMaxMs
-    ) =>
-      batchWrite(
-        documentClient,
-        tableName,
-        items,
-        options,
-        retryTimeoutMinMs,
-        retryTimeoutMaxMs
-      ),
-    getItem: (tableName, key, options) =>
-      getItem(documentClient, tableName, key, options),
-    putItem: (tableName, item, options) =>
-      putItem(documentClient, tableName, item, options),
-    query: (tableName, keyCondition) =>
-      query(documentClient, tableName, keyCondition),
-    queryByIndex: (tableName, keyCondition, indexName) =>
-      query(documentClient, tableName, keyCondition, true, indexName),
-    remove: (tableName, key, options) =>
-      remove(documentClient, tableName, key, options),
-    scan: (tableName, options) => scan(documentClient, tableName, options)
-  };
-};
+export interface BaseInput {
+  tableName: string;
+}
 
-export const init = (
-  dynamoDbClientConfig: DynamoDBClientConfig,
-  translateConfig?: TranslateConfig
-): MhDynamoClient => {
-  const client = new DynamoDB(dynamoDbClientConfig);
+export interface BatchRetryInput {
+  retryTimeoutMinMs?: number;
+  retryTimeoutMaxMs?: number;
+}
 
-  const translateOptions = { ...translateConfig };
+export interface SingleItemInput {
+  key: Record<string, any>;
+  item: Record<string, any>;
+}
 
-  if (!translateOptions.marshallOptions) {
-    translateOptions.marshallOptions = {
-      removeUndefinedValues: true
-    };
+export interface MultiItemInput {
+  items: Record<string, any>[];
+  keys: Record<string, any>[];
+}
+
+export class MhDynamoClient {
+  private options: MhDynamoClientOptions;
+  protected documentClient: DynamoDBDocument;
+
+  static fromClient(client: DynamoDBClient, options?: MhDynamoClientOptions) {
+    return new MhDynamoClient(client, options);
   }
 
-  const documentClient = DynamoDBDocument.from(client, translateOptions);
-  return createDynamoClient(documentClient);
-};
-
-export const initWithClient = (
-  client: DynamoDBClient,
-  translateConfig?: TranslateConfig
-): MhDynamoClient => {
-  const translateOptions = { ...translateConfig };
-
-  if (!translateOptions.marshallOptions) {
-    translateOptions.marshallOptions = {
-      removeUndefinedValues: true
-    };
+  static fromConfig(
+    dynamoDbClientConfig: DynamoDBClientConfig,
+    options?: MhDynamoClientOptions
+  ) {
+    const client = new DynamoDB(dynamoDbClientConfig);
+    return new MhDynamoClient(client, options);
   }
 
-  const documentClient = DynamoDBDocument.from(client, translateOptions);
-  return createDynamoClient(documentClient);
-};
+  static fromDocumentClient(
+    dynamoDbDocumentClient: DynamoDBDocument,
+    options?: MhDynamoClientOptions
+  ) {
+    return new MhDynamoClient(dynamoDbDocumentClient, options);
+  }
+
+  /**
+   * Cannot be initiated. Use MhDynamoClient.fromClient() or MhDynamoClient.fromConfig() instead.
+   */
+  private constructor(
+    client: DynamoDBClient | DynamoDBDocument,
+    options?: MhDynamoClientOptions
+  ) {
+    this.options = options || {};
+
+    if (client as DynamoDBDocument) {
+      this.documentClient = client as DynamoDBDocument;
+      return this;
+    }
+
+    const translateOptions = { ...this.options.translateConfig };
+    if (!translateOptions?.marshallOptions) {
+      translateOptions.marshallOptions = {
+        removeUndefinedValues: true
+      };
+    }
+
+    this.options.translateConfig = translateOptions;
+    this.documentClient = DynamoDBDocument.from(
+      client as DynamoDBClient,
+      translateOptions
+    );
+  }
+
+  protected ensureValidBase(tableName: string) {
+    if (!this.documentClient) throw new Error('documentClient is required.');
+    if (!tableName) throw new Error('tableName is required.');
+  }
+
+  protected ensureValid(
+    tableName: string,
+    object: Record<string, any>,
+    objectName = 'object'
+  ) {
+    this.ensureValidBase(tableName);
+
+    if (!object) throw new Error('object is required.');
+    if (typeof object !== 'object')
+      throw new Error(`${objectName} should be an object.`);
+  }
+
+  protected ensureValidQuery(
+    tableName: string,
+    object: Record<string, any>,
+    indexName: string
+  ) {
+    this.ensureValid(tableName, object, 'keyCondition');
+    if (!indexName) throw new Error('indexName is required.');
+  }
+
+  protected ensureValidBatchWrite(
+    tableName: string,
+    items: Record<string, any>[]
+  ) {
+    this.ensureValidBase(tableName);
+
+    if (!items) throw new Error('Item list is required.');
+    if (isMultidimensional(items)) {
+      throw new Error("Item list can't contain arrays (be multidimensional).");
+    }
+  }
+
+  protected ensureValidBatch(tableName: string, keys: Record<string, any>[]) {
+    this.ensureValidBase(tableName);
+
+    if (!keys) throw new Error('Key list is required.');
+    if (!keys.every((key) => typeof key === 'object')) {
+      throw new Error('Keys must be objects.');
+    }
+  }
+
+  public remove = remove;
+  public batchRemove = batchRemove;
+  public putItem = putItem;
+  public batchWrite = batchWrite;
+  public getItem = getItem;
+  public batchGet = batchGet;
+  public scan = scan;
+  public query = query;
+  public queryByIndex = queryByIndex;
+
+  public execute = execute;
+  protected retryUnprocessedItems = retryUnprocessedItems;
+}

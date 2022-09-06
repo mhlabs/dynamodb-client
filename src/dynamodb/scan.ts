@@ -1,41 +1,33 @@
-import {
-  DynamoDBDocument,
-  ScanCommand,
-  ScanCommandInput
-} from '@aws-sdk/lib-dynamodb';
+import { ScanCommand, ScanCommandInput } from '@aws-sdk/lib-dynamodb';
+import { BaseInput, MhDynamoClient } from '../../index';
 
-const ensureValidParameters = (
-  documentClient: DynamoDBDocument,
-  tableName: string
-) => {
-  if (!documentClient) throw new Error('documentClient is required.');
-  if (!tableName) throw new Error('Table name is required.');
-};
+export interface ScanInput extends BaseInput {
+  options?: ScanCommandInput;
+}
 
-export const scan = async <T>(
-  documentClient: DynamoDBDocument,
-  tableName: string,
-  options?: ScanCommandInput
-): Promise<T[]> => {
-  ensureValidParameters(documentClient, tableName);
+export async function scan<T>(
+  this: MhDynamoClient,
+  input: ScanInput
+): Promise<T[]> {
+  this.ensureValidBase(input.tableName);
 
   const items: T[] = [];
-  let exclusiveStartKey;
+  let exclusiveStartKey: { [key: string]: any } | undefined;
 
   do {
-    const input: ScanCommandInput = {
-      TableName: tableName,
+    const cmdInput: ScanCommandInput = {
+      TableName: input.tableName,
       ExclusiveStartKey: exclusiveStartKey,
-      ...options
+      ...input.options
     };
 
-    const scanCommand = new ScanCommand(input);
+    const scanCommand = new ScanCommand(cmdInput);
     // eslint-disable-next-line no-await-in-loop
-    const scanResponse = await documentClient.send(scanCommand);
+    const scanResponse = await this.documentClient.send(scanCommand);
 
     exclusiveStartKey = scanResponse.LastEvaluatedKey;
     items.push(...(scanResponse.Items as T[]));
   } while (exclusiveStartKey);
 
   return items;
-};
+}
