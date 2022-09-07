@@ -60,7 +60,11 @@ export class MhDynamoClient {
     client: DynamoDBClient | DynamoDBDocument,
     options?: MhDynamoClientOptions
   ) {
-    this.globalOptions = options || {};
+    this.globalOptions = {
+      injectXrayTrace: true,
+      extractXrayTrace: true,
+      ...options
+    };
 
     if (client as DynamoDBDocument) {
       this.documentClient = client as DynamoDBDocument;
