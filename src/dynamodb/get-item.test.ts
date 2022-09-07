@@ -53,7 +53,7 @@ describe('get-item', () => {
     await client.getItem<DynamoItem>({
       tableName: table,
       key,
-      options
+      commandOptions: options
     });
 
     const appliedArguments =

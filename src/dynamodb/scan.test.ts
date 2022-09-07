@@ -63,7 +63,7 @@ describe('scan', () => {
 
     await client.scan<DynamoItem>({
       tableName: table,
-      options
+      commandOptions: options
     });
 
     const appliedArguments =

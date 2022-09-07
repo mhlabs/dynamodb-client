@@ -1,20 +1,20 @@
 import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
+import { MhDynamoClient } from '../../..';
 import {
-  BaseInput,
-  BatchRetryInput,
-  MhDynamoClient,
-  MultiItemInput
-} from '../../..';
+  BaseOptions,
+  BatchRetryOptions,
+  MultiItemOptions
+} from '../../../types';
 import { chunk } from '../../array/chunk';
 import { constants } from './constants';
 import { filterUniqueKeys } from './duplicate-handling/filter';
 import { parseRetryOptions } from './retry-options';
 
-export interface BatchRemoveInput
-  extends BaseInput,
-    BatchRetryInput,
-    Omit<MultiItemInput, 'items'> {}
+export interface BatchRemoveOptions
+  extends BaseOptions,
+    BatchRetryOptions,
+    Omit<MultiItemOptions, 'items'> {}
 
 const createBatchDeleteCommand = (
   tableName: string,
@@ -34,25 +34,29 @@ const createBatchDeleteCommand = (
 
 export async function batchRemove(
   this: MhDynamoClient,
-  input: BatchRemoveInput
+  options: BatchRemoveOptions
 ): Promise<boolean> {
-  this.ensureValidBatch(input.tableName, input.keys);
+  options = this.mergeWithGlobalOptions(options);
+  this.ensureValidBatch(options, options.keys);
 
-  if (!input.keys.length) return true;
+  if (!options.keys.length) return true;
 
-  const uniqueKeys = filterUniqueKeys(input.keys);
+  const uniqueKeys = filterUniqueKeys(options.keys);
   const chunkedItems = chunk(uniqueKeys, constants.MAX_ITEMS_PER_BATCH_WRITE);
 
   const retryOptions = parseRetryOptions(
-    input.retryTimeoutMinMs,
-    input.retryTimeoutMaxMs
+    options.retryTimeoutMinMs,
+    options.retryTimeoutMaxMs
   );
 
   const runBatches = chunkedItems.map((batch, index) => {
-    const batchWriteCommand = createBatchDeleteCommand(input.tableName, batch);
+    const batchWriteCommand = createBatchDeleteCommand(
+      options.tableName as string,
+      batch
+    );
 
     return this.execute({
-      tableName: input.tableName,
+      tableName: options.tableName,
       batchCommand: batchWriteCommand,
       batchNo: index + 1,
       retryCount: 0,

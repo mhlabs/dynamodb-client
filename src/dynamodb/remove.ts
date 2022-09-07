@@ -1,20 +1,24 @@
 import { DeleteCommand, DeleteCommandInput } from '@aws-sdk/lib-dynamodb';
-import { BaseInput, MhDynamoClient, SingleItemInput } from '../../index';
+import { MhDynamoClient } from '../../index';
+import { BaseOptions, SingleItemOptions } from '../../types';
 
-export interface RemoveInput extends BaseInput, Omit<SingleItemInput, 'item'> {
-  options?: DeleteCommandInput;
+export interface RemoveOptions
+  extends BaseOptions,
+    Omit<SingleItemOptions, 'item'> {
+  commandOptions?: DeleteCommandInput;
 }
 
 export async function remove(
   this: MhDynamoClient,
-  input: RemoveInput
+  options: RemoveOptions
 ): Promise<boolean> {
-  this.ensureValid(input.tableName, input.key, 'key');
+  options = this.mergeWithGlobalOptions(options);
+  this.ensureValid(options, options.key, 'key');
 
   const cmdInput: DeleteCommandInput = {
-    TableName: input.tableName,
-    Key: input.key,
-    ...input.options
+    TableName: options.tableName,
+    Key: options.key,
+    ...options.commandOptions
   };
 
   const deleteCommand = new DeleteCommand(cmdInput);

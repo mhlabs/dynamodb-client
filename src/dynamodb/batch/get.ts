@@ -3,32 +3,32 @@ import { BatchGetCommand, BatchGetCommandInput } from '@aws-sdk/lib-dynamodb';
 import { chunk } from '../../array/chunk';
 import { constants } from './constants';
 
+import { MhDynamoClient } from '../../..';
 import {
-  BaseInput,
-  BatchRetryInput,
-  MhDynamoClient,
-  MultiItemInput
-} from '../../..';
+  BaseFetchOptions,
+  BatchRetryOptions,
+  MultiItemOptions
+} from '../../../types';
 import { filterUniqueKeys } from './duplicate-handling/filter';
 import { parseRetryOptions } from './retry-options';
 
-export interface BatchGetInput
-  extends BaseInput,
-    BatchRetryInput,
-    Omit<MultiItemInput, 'items'> {
-  options?: Record<string, any>;
+export interface BatchGetOptions
+  extends BaseFetchOptions,
+    BatchRetryOptions,
+    Omit<MultiItemOptions, 'items'> {
+  batchOptions?: Record<string, any>;
 }
 
 const createBatchGetCommand = (
   tableName: string,
   batch: Record<string, any>[],
-  options?: Record<string, any>
+  batchOptions?: Record<string, any>
 ) => {
   const input: BatchGetCommandInput = {
     RequestItems: {
       [tableName]: {
         Keys: batch,
-        ...options
+        ...batchOptions
       }
     }
   };
@@ -38,28 +38,29 @@ const createBatchGetCommand = (
 
 export async function batchGet<T>(
   this: MhDynamoClient,
-  input: BatchGetInput
+  options: BatchGetOptions
 ): Promise<T[]> {
-  this.ensureValidBatch(input.tableName, input.keys);
+  options = this.mergeWithGlobalOptions(options);
+  this.ensureValidBatch(options, options.keys);
 
-  if (!input.keys.length) return [];
+  if (!options.keys.length) return [];
 
-  const uniqueKeys = filterUniqueKeys(input.keys);
+  const uniqueKeys = filterUniqueKeys(options.keys);
   const chunkedItems = chunk(uniqueKeys, constants.MAX_KEYS_PER_BATCH_GET);
 
   const retryOptions = parseRetryOptions(
-    input.retryTimeoutMinMs,
-    input.retryTimeoutMaxMs
+    options.retryTimeoutMinMs,
+    options.retryTimeoutMaxMs
   );
 
   const runBatches = chunkedItems.map((batch, index) => {
     const batchGetCommand = createBatchGetCommand(
-      input.tableName,
+      options.tableName as string,
       batch,
-      input.options
+      options.batchOptions
     );
     return this.execute<T>({
-      tableName: input.tableName,
+      tableName: options.tableName,
       batchCommand: batchGetCommand,
       batchNo: index + 1,
       retryCount: 0,

@@ -1,20 +1,23 @@
 import { GetCommand, GetCommandInput } from '@aws-sdk/lib-dynamodb';
-import { BaseInput, MhDynamoClient, SingleItemInput } from '../../index';
+import { MhDynamoClient } from '../../index';
+import { BaseFetchOptions, SingleItemOptions } from '../../types';
 
-export interface GetInput extends BaseInput, Omit<SingleItemInput, 'item'> {
-  options?: GetCommandInput;
+export interface GetOptions
+  extends BaseFetchOptions,
+    Omit<SingleItemOptions, 'item'> {
+  commandOptions?: GetCommandInput;
 }
 
 export async function getItem<T>(
   this: MhDynamoClient,
-  input: GetInput
+  options: GetOptions
 ): Promise<T | null> {
-  this.ensureValid(input.tableName, input.key, 'key');
+  this.ensureValid(options, options.key, 'key');
 
   const cmdInput: GetCommandInput = {
-    TableName: input.tableName,
-    Key: input.key,
-    ...input.options
+    TableName: options.tableName,
+    Key: options.key,
+    ...options.commandOptions
   };
 
   const command = new GetCommand(cmdInput);

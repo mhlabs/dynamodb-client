@@ -1,17 +1,21 @@
 import { PutCommand, PutCommandInput } from '@aws-sdk/lib-dynamodb';
-import { BaseInput, MhDynamoClient, SingleItemInput } from '../../index';
+import { MhDynamoClient } from '../../index';
+import { BaseSaveOptions, SingleItemOptions } from '../../types';
 
-export interface PutInput extends BaseInput, Omit<SingleItemInput, 'key'> {
-  options?: PutCommandInput;
+export interface PutOptions
+  extends BaseSaveOptions,
+    Omit<SingleItemOptions, 'key'> {
+  commandOptions?: PutCommandInput;
 }
 
-export async function putItem(this: MhDynamoClient, input: PutInput) {
-  this.ensureValid(input.tableName, input.item, 'item');
+export async function putItem(this: MhDynamoClient, options: PutOptions) {
+  options = this.mergeWithGlobalOptions(options);
+  this.ensureValid(options, options.item, 'item');
 
   const cmdInput: PutCommandInput = {
-    TableName: input.tableName,
-    Item: input.item,
-    ...input.options
+    TableName: options.tableName,
+    Item: options.item,
+    ...options.commandOptions
   };
 
   const command = new PutCommand(cmdInput);

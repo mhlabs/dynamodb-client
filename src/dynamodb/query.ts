@@ -1,7 +1,8 @@
 import { QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
-import { BaseInput, MhDynamoClient } from '../..';
+import { MhDynamoClient } from '../..';
+import { BaseFetchOptions } from '../../types';
 
-export interface QueryInput extends BaseInput {
+export interface QueryOptions extends BaseFetchOptions {
   keyCondition: Record<string, any>;
   indexName: string;
 }
@@ -37,22 +38,23 @@ const generateKeyCondition = (
   } as QueryCommandInput;
 };
 
-const createCommand = (input: QueryInput) => {
-  const commandInput = generateKeyCondition(input.keyCondition);
-  commandInput.TableName = input.tableName;
+const createCommand = (options: QueryOptions) => {
+  const commandInput = generateKeyCondition(options.keyCondition);
+  commandInput.TableName = options.tableName;
 
-  if (input.indexName) commandInput.IndexName = input.indexName;
+  if (options.indexName) commandInput.IndexName = options.indexName;
 
   return new QueryCommand(commandInput);
 };
 
 export async function query<T>(
   this: MhDynamoClient,
-  input: Omit<QueryInput, 'indexName'>
+  options: Omit<QueryOptions, 'indexName'>
 ): Promise<T[]> {
-  this.ensureValid(input.tableName, input.keyCondition, 'keyCondition');
+  options = this.mergeWithGlobalOptions(options);
+  this.ensureValid(options, options.keyCondition, 'keyCondition');
 
-  const command = createCommand({ ...input, indexName: '' });
+  const command = createCommand({ ...options, indexName: '' });
   const data = await this.documentClient.send(command);
 
   return data.Items as T[];
@@ -60,11 +62,12 @@ export async function query<T>(
 
 export async function queryByIndex<T>(
   this: MhDynamoClient,
-  input: QueryInput
+  options: QueryOptions
 ): Promise<T[]> {
-  this.ensureValidQuery(input.tableName, input.keyCondition, input.indexName);
+  options = this.mergeWithGlobalOptions(options);
+  this.ensureValidQuery(options, options.keyCondition, options.indexName);
 
-  const command = createCommand(input);
+  const command = createCommand(options);
   const data = await this.documentClient.send(command);
 
   return data.Items as T[];

@@ -1,11 +1,11 @@
 import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
+import { MhDynamoClient } from '../../..';
 import {
-  BaseInput,
-  BatchRetryInput,
-  MhDynamoClient,
-  MultiItemInput
-} from '../../..';
+  BaseSaveOptions,
+  BatchRetryOptions,
+  MultiItemOptions
+} from '../../../types';
 import { chunk } from '../../array/chunk';
 import { constants } from './constants';
 import {
@@ -15,10 +15,10 @@ import {
 } from './duplicate-handling/filter';
 import { parseRetryOptions } from './retry-options';
 
-export interface BatchWriteInput
-  extends BaseInput,
-    BatchRetryInput,
-    Omit<MultiItemInput, 'keys'> {
+export interface BatchWriteOptions
+  extends BaseSaveOptions,
+    BatchRetryOptions,
+    Omit<MultiItemOptions, 'keys'> {
   options?: DuplicateOptions;
 }
 
@@ -40,26 +40,27 @@ const createBatchWriteCommand = (
 
 export async function batchWrite(
   this: MhDynamoClient,
-  input: BatchWriteInput
+  options: BatchWriteOptions
 ): Promise<boolean> {
-  this.ensureValidBatchWrite(input.tableName, input.items);
-  if (!input.items.length) return true;
+  options = this.mergeWithGlobalOptions(options);
+  this.ensureValidBatchWrite(options, options.items);
+  if (!options.items.length) return true;
 
-  const commandOptions = { ...defaultDuplicateOptions, ...input.options };
+  const commandOptions = { ...defaultDuplicateOptions, ...options.options };
 
-  const uniqueItems = filterUniqueObjects(input.items, commandOptions);
+  const uniqueItems = filterUniqueObjects(options.items, commandOptions);
   const chunkedItems = chunk(uniqueItems, constants.MAX_ITEMS_PER_BATCH_WRITE);
 
   const retryOptions = parseRetryOptions(
-    input.retryTimeoutMinMs,
-    input.retryTimeoutMaxMs
+    options.retryTimeoutMinMs,
+    options.retryTimeoutMaxMs
   );
 
   const runBatches = chunkedItems.map((batch, index) => {
     const batchWriteCommand = createBatchWriteCommand(input.tableName, batch);
 
     return this.execute({
-      tableName: input.tableName,
+      tableName: options.tableName,
       batchCommand: batchWriteCommand,
       batchNo: index + 1,
       retryCount: 0,

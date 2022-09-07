@@ -29,7 +29,7 @@ describe('put', () => {
     const result = await client.putItem({
       tableName: table,
       item,
-      options
+      commandOptions: options
     });
 
     const appliedArguments =
@@ -39,7 +39,7 @@ describe('put', () => {
     expect(appliedArguments.ConditionExpression).toBe(
       options.ConditionExpression
     );
-    expect(appliedArguments.Item).toBe(item);
+    expect(appliedArguments.Item).toEqual(item);
     expect(result).toBe(true);
   });
 });

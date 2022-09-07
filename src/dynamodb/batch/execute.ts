@@ -4,13 +4,14 @@ import {
   BatchWriteCommand,
   BatchWriteCommandOutput
 } from '@aws-sdk/lib-dynamodb';
-import { BaseInput, MhDynamoClient } from '../../..';
+import { MhDynamoClient } from '../../..';
+import { BaseOptions } from '../../../types';
 
 import { randomInteger } from '../../randomizer/random-integer';
 import { constants } from './constants';
 import { RetryOptions } from './retry-options';
 
-export interface ExecuteInput<T> extends BaseInput {
+export interface ExecuteOptions<T> extends BaseOptions {
   batchCommand: BatchGetCommand | BatchWriteCommand;
   batchNo: number;
   retryCount: number;
@@ -58,26 +59,26 @@ const createRetryCommandFromResponse = (
 
 export async function retryUnprocessedItems<T>(
   this: MhDynamoClient,
-  input: ExecuteInput<T>,
+  options: ExecuteOptions<T>,
   response: BatchGetCommandOutput | BatchWriteCommandOutput
 ): Promise<T[]> {
-  if (input.retryCount > constants.UNPROCESSED_ITEMS_RETRY_LIMIT) {
+  if (options.retryCount > constants.UNPROCESSED_ITEMS_RETRY_LIMIT) {
     const unprocessed = getUnprocessedPropertyNameFromResponse(response);
 
     throw new Error(
-      `Batch: ${input.batchNo} - returned ${unprocessed} after ${
-        input.retryCount
-      } attempts (${input.retryCount - 1} retries)`
+      `Batch: ${options.batchNo} - returned ${unprocessed} after ${
+        options.retryCount
+      } attempts (${options.retryCount - 1} retries)`
     );
   }
 
   const randomTimeoutToAvoidThrottling = randomInteger(
-    input.retryOptions.minMs,
-    input.retryOptions.maxMs
+    options.retryOptions.minMs,
+    options.retryOptions.maxMs
   );
 
   console.log(
-    `UnprocessedItems, retrying after waiting ${randomTimeoutToAvoidThrottling} ms, attempt ${input.retryCount})...`
+    `UnprocessedItems, retrying after waiting ${randomTimeoutToAvoidThrottling} ms, attempt ${options.retryCount})...`
   );
 
   await new Promise((r) => {
@@ -85,27 +86,27 @@ export async function retryUnprocessedItems<T>(
   });
 
   const command = createRetryCommandFromResponse(response);
-  return await this.execute<T>({ ...input, batchCommand: command });
+  return await this.execute<T>({ ...options, batchCommand: command });
 }
 
 export async function execute<T>(
   this: MhDynamoClient,
-  input: ExecuteInput<T>
+  options: ExecuteOptions<T>
 ): Promise<T[]> {
-  let items: T[] = [...input.previousItems];
+  let items: T[] = [...options.previousItems];
 
   const response: BatchGetCommandOutput | BatchWriteCommandOutput =
-    await this.documentClient.send(input.batchCommand as any);
+    await this.documentClient.send(options.batchCommand as any);
 
   if ('Responses' in response) {
-    if (response.Responses && response.Responses[input.tableName]) {
-      items.push(...(response.Responses[input.tableName] as T[]));
+    if (response.Responses && response.Responses[options.tableName as string]) {
+      items.push(...(response.Responses[options.tableName as string] as T[]));
     }
   }
 
   if (!needsRetry(response)) return items;
   items = await this.retryUnprocessedItems<T>(
-    { ...input, previousItems: items, retryCount: ++input.retryCount },
+    { ...options, previousItems: items, retryCount: ++options.retryCount },
     response
   );
 

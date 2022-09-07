@@ -28,7 +28,7 @@ describe('remove', () => {
     const result = await client.remove({
       key,
       tableName: table,
-      options
+      commandOptions: options
     });
 
     const appliedArguments =

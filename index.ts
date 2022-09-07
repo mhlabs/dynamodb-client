@@ -3,9 +3,8 @@ import {
   DynamoDBClient,
   DynamoDBClientConfig
 } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocument, TranslateConfig } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
-import { isMultidimensional } from './src/array/isMultidimensional';
 import { execute, retryUnprocessedItems } from './src/dynamodb/batch/execute';
 import { batchGet } from './src/dynamodb/batch/get';
 import { batchRemove } from './src/dynamodb/batch/remove';
@@ -15,33 +14,22 @@ import { putItem } from './src/dynamodb/put-item';
 import { query, queryByIndex } from './src/dynamodb/query';
 import { remove } from './src/dynamodb/remove';
 import { scan } from './src/dynamodb/scan';
-
-export interface MhDynamoClientOptions {
-  translateConfig?: TranslateConfig;
-  tableName?: string;
-}
-
-export interface BaseInput {
-  tableName: string;
-}
-
-export interface BatchRetryInput {
-  retryTimeoutMinMs?: number;
-  retryTimeoutMaxMs?: number;
-}
-
-export interface SingleItemInput {
-  key: Record<string, any>;
-  item: Record<string, any>;
-}
-
-export interface MultiItemInput {
-  items: Record<string, any>[];
-  keys: Record<string, any>[];
-}
+import {
+  BaseFetchOptions,
+  BaseOptions,
+  BaseSaveOptions,
+  MhDynamoClientOptions
+} from './types';
+import {
+  ensureValid,
+  ensureValidBase,
+  ensureValidBatch,
+  ensureValidBatchWrite,
+  ensureValidQuery
+} from './validation';
 
 export class MhDynamoClient {
-  private options: MhDynamoClientOptions;
+  private globalOptions: MhDynamoClientOptions;
   protected documentClient: DynamoDBDocument;
 
   static fromClient(client: DynamoDBClient, options?: MhDynamoClientOptions) {
@@ -70,74 +58,28 @@ export class MhDynamoClient {
     client: DynamoDBClient | DynamoDBDocument,
     options?: MhDynamoClientOptions
   ) {
-    this.options = options || {};
+    this.globalOptions = options || {};
 
     if (client as DynamoDBDocument) {
       this.documentClient = client as DynamoDBDocument;
       return this;
     }
 
-    const translateOptions = { ...this.options.translateConfig };
+    const translateOptions = { ...this.globalOptions.translateConfig };
     if (!translateOptions?.marshallOptions) {
       translateOptions.marshallOptions = {
         removeUndefinedValues: true
       };
     }
 
-    this.options.translateConfig = translateOptions;
+    this.globalOptions.translateConfig = translateOptions;
     this.documentClient = DynamoDBDocument.from(
       client as DynamoDBClient,
       translateOptions
     );
   }
 
-  protected ensureValidBase(tableName: string) {
-    if (!this.documentClient) throw new Error('documentClient is required.');
-    if (!tableName) throw new Error('tableName is required.');
-  }
-
-  protected ensureValid(
-    tableName: string,
-    object: Record<string, any>,
-    objectName = 'object'
-  ) {
-    this.ensureValidBase(tableName);
-
-    if (!object) throw new Error('object is required.');
-    if (typeof object !== 'object')
-      throw new Error(`${objectName} should be an object.`);
-  }
-
-  protected ensureValidQuery(
-    tableName: string,
-    object: Record<string, any>,
-    indexName: string
-  ) {
-    this.ensureValid(tableName, object, 'keyCondition');
-    if (!indexName) throw new Error('indexName is required.');
-  }
-
-  protected ensureValidBatchWrite(
-    tableName: string,
-    items: Record<string, any>[]
-  ) {
-    this.ensureValidBase(tableName);
-
-    if (!items) throw new Error('Item list is required.');
-    if (isMultidimensional(items)) {
-      throw new Error("Item list can't contain arrays (be multidimensional).");
-    }
-  }
-
-  protected ensureValidBatch(tableName: string, keys: Record<string, any>[]) {
-    this.ensureValidBase(tableName);
-
-    if (!keys) throw new Error('Key list is required.');
-    if (!keys.every((key) => typeof key === 'object')) {
-      throw new Error('Keys must be objects.');
-    }
-  }
-
+  // Public methods
   public remove = remove;
   public batchRemove = batchRemove;
   public putItem = putItem;
@@ -148,6 +90,46 @@ export class MhDynamoClient {
   public query = query;
   public queryByIndex = queryByIndex;
 
-  public execute = execute;
+  // Internal methods
+  public execute = execute; // Public because of test
   protected retryUnprocessedItems = retryUnprocessedItems;
+
+  // Validation
+  protected ensureValidBase = ensureValidBase;
+  protected ensureValid = ensureValid;
+  protected ensureValidQuery = ensureValidQuery;
+  protected ensureValidBatch = ensureValidBatch;
+  protected ensureValidBatchWrite = ensureValidBatchWrite;
+
+  // Helpers
+  protected mergeWithGlobalOptions<T>(localOptions: T): T {
+    const options = { ...localOptions };
+    if (options as BaseOptions) {
+      if (!(options as BaseOptions).tableName) {
+        (options as BaseOptions).tableName = this.globalOptions.tableName;
+      }
+    }
+    if (options as BaseFetchOptions) {
+      if ((options as BaseFetchOptions).extractXrayTrace === undefined) {
+        (options as BaseFetchOptions).extractXrayTrace =
+          this.globalOptions.extractXrayTrace;
+      }
+    }
+    if (options as BaseSaveOptions) {
+      if ((options as BaseSaveOptions).injectXrayTrace === undefined) {
+        (options as BaseSaveOptions).injectXrayTrace =
+          this.globalOptions.injectXrayTrace;
+      }
+    }
+    return options;
+  }
+
+  }
+
+
+  }
+
+  }
+
+
 }
