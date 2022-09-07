@@ -3,12 +3,12 @@ import { BatchGetCommand, BatchGetCommandInput } from '@aws-sdk/lib-dynamodb';
 import { chunk } from '../../array/chunk';
 import { constants } from './constants';
 
-import { MhDynamoClient } from '../../..';
+import { MhDynamoClient } from '../..';
 import {
   BaseFetchOptions,
   BatchRetryOptions,
   MultiItemOptions
-} from '../../../types';
+} from '../../types';
 import { filterUniqueKeys } from './duplicate-handling/filter';
 import { parseRetryOptions } from './retry-options';
 

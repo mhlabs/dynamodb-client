@@ -3,7 +3,7 @@ import { mockClient } from 'aws-sdk-client-mock';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-import { MhDynamoClient } from '../..';
+import { MhDynamoClient } from '..';
 
 let client: MhDynamoClient;
 

@@ -4,8 +4,8 @@ import {
   BatchWriteCommand,
   BatchWriteCommandOutput
 } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../../..';
-import { BaseOptions } from '../../../types';
+import { MhDynamoClient } from '../..';
+import { BaseOptions } from '../../types';
 
 import { randomInteger } from '../../randomizer/random-integer';
 import { constants } from './constants';

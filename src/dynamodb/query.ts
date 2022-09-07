@@ -1,6 +1,6 @@
 import { QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../..';
-import { BaseFetchOptions } from '../../types';
+import { MhDynamoClient } from '..';
+import { BaseFetchOptions } from '../types';
 
 export interface QueryOptions extends BaseFetchOptions {
   keyCondition: Record<string, any>;

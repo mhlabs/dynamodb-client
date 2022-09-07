@@ -1,5 +1,5 @@
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../../..';
+import { MhDynamoClient } from '../..';
 import { constants } from './constants';
 
 const executeMock = jest.fn();

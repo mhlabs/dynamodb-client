@@ -1,5 +1,5 @@
-import { MhDynamoClient } from '../..';
-import { WithXrayTraceId } from '../../types';
+import { MhDynamoClient } from '..';
+import { WithXrayTraceId } from '../types';
 
 export const _X_AMZN_TRACE_ID = '_X_AMZN_TRACE_ID';
 

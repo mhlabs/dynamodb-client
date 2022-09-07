@@ -1,6 +1,6 @@
 import { DeleteCommand, DeleteCommandInput } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../../index';
-import { BaseOptions, SingleItemOptions } from '../../types';
+import { MhDynamoClient } from '../index';
+import { BaseOptions, SingleItemOptions } from '../types';
 
 export interface RemoveOptions
   extends BaseOptions,

@@ -5,17 +5,17 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
-import { execute, retryUnprocessedItems } from './src/dynamodb/batch/execute';
-import { batchGet } from './src/dynamodb/batch/get';
-import { batchRemove } from './src/dynamodb/batch/remove';
-import { batchWrite } from './src/dynamodb/batch/write';
-import { getItem } from './src/dynamodb/get-item';
-import { putItem } from './src/dynamodb/put-item';
-import { query, queryByIndex } from './src/dynamodb/query';
-import { remove } from './src/dynamodb/remove';
-import { scan } from './src/dynamodb/scan';
-import { addXrayTraceId } from './src/middlewares/add-xray-trace-id';
-import { removeXrayTraceId } from './src/middlewares/remove-xray-trace-id';
+import { execute, retryUnprocessedItems } from './dynamodb/batch/execute';
+import { batchGet } from './dynamodb/batch/get';
+import { batchRemove } from './dynamodb/batch/remove';
+import { batchWrite } from './dynamodb/batch/write';
+import { getItem } from './dynamodb/get-item';
+import { putItem } from './dynamodb/put-item';
+import { query, queryByIndex } from './dynamodb/query';
+import { remove } from './dynamodb/remove';
+import { scan } from './dynamodb/scan';
+import { addXrayTraceId } from './middlewares/add-xray-trace-id';
+import { removeXrayTraceId } from './middlewares/remove-xray-trace-id';
 import {
   BaseFetchOptions,
   BaseOptions,

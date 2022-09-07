@@ -5,7 +5,7 @@ const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
 import { GetItemCommandInput } from '@aws-sdk/client-dynamodb';
 
-import { MhDynamoClient } from '../..';
+import { MhDynamoClient } from '..';
 
 let client: MhDynamoClient;
 

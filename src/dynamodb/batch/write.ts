@@ -1,12 +1,12 @@
 import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
-import { MhDynamoClient } from '../../..';
+import { MhDynamoClient } from '../..';
+import { chunk } from '../../array/chunk';
 import {
   BaseSaveOptions,
   BatchRetryOptions,
   MultiItemOptions
-} from '../../../types';
-import { chunk } from '../../array/chunk';
+} from '../../types';
 import { constants } from './constants';
 import {
   defaultDuplicateOptions,

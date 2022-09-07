@@ -1,6 +1,6 @@
 import { GetCommand, GetCommandInput } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../../index';
-import { BaseFetchOptions, SingleItemOptions } from '../../types';
+import { MhDynamoClient } from '../index';
+import { BaseFetchOptions, SingleItemOptions } from '../types';
 
 export interface GetOptions
   extends BaseFetchOptions,

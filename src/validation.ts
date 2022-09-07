@@ -1,5 +1,5 @@
 import { MhDynamoClient } from '.';
-import { isMultidimensional } from './src/array/isMultidimensional';
+import { isMultidimensional } from './array/isMultidimensional';
 import { BaseOptions } from './types';
 
 export function ensureValidBase(this: MhDynamoClient, options: BaseOptions) {

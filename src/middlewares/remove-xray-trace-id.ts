@@ -1,5 +1,5 @@
-import { MhDynamoClient } from '../..';
-import { WithXrayTraceId } from '../../types';
+import { MhDynamoClient } from '..';
+import { WithXrayTraceId } from '../types';
 
 export function removeXrayTraceId<T>(
   this: MhDynamoClient,

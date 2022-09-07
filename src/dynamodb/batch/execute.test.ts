@@ -4,7 +4,7 @@ import {
   DynamoDBDocument
 } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
-import { MhDynamoClient } from '../../..';
+import { MhDynamoClient } from '../..';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 

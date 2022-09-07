@@ -1,6 +1,6 @@
 import { ScanCommand, ScanCommandInput } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../../index';
-import { BaseFetchOptions } from '../../types';
+import { MhDynamoClient } from '../index';
+import { BaseFetchOptions } from '../types';
 
 export interface ScanOptions extends BaseFetchOptions {
   commandOptions?: ScanCommandInput;

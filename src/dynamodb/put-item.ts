@@ -1,6 +1,6 @@
 import { PutCommand, PutCommandInput } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../../index';
-import { BaseSaveOptions, SingleItemOptions } from '../../types';
+import { MhDynamoClient } from '../index';
+import { BaseSaveOptions, SingleItemOptions } from '../types';
 
 export interface PutOptions
   extends BaseSaveOptions,

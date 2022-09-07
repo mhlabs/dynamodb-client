@@ -4,7 +4,7 @@ import {
   DynamoDBClient
 } from '@aws-sdk/client-dynamodb';
 
-import { MhDynamoClient } from '../index';
+import { MhDynamoClient } from '../src/index';
 
 const tableName = 'table';
 
