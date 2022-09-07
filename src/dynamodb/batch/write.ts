@@ -57,7 +57,11 @@ export async function batchWrite(
   );
 
   const runBatches = chunkedItems.map((batch, index) => {
-    const batchWriteCommand = createBatchWriteCommand(input.tableName, batch);
+    batch = this.enrichInputs(batch, options);
+    const batchWriteCommand = createBatchWriteCommand(
+      options.tableName as string,
+      batch
+    );
 
     return this.execute({
       tableName: options.tableName,

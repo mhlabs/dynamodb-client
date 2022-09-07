@@ -23,5 +23,7 @@ export async function getItem<T>(
   const command = new GetCommand(cmdInput);
   const response = await this.documentClient.send(command);
 
-  return (response?.Item as T) || null;
+  return !response?.Item
+    ? null
+    : this.sanitizeOutput(response?.Item as T, options);
 }

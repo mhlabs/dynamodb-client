@@ -74,5 +74,5 @@ export async function batchGet<T>(
   const items: T[] = [];
   responses.forEach((response) => items.push(...response));
 
-  return items;
+  return this.sanitizeOutputs(items, options);
 }

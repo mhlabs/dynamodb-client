@@ -57,7 +57,7 @@ export async function query<T>(
   const command = createCommand({ ...options, indexName: '' });
   const data = await this.documentClient.send(command);
 
-  return data.Items as T[];
+  return this.sanitizeOutputs(data.Items as T[], options);
 }
 
 export async function queryByIndex<T>(
@@ -70,5 +70,5 @@ export async function queryByIndex<T>(
   const command = createCommand(options);
   const data = await this.documentClient.send(command);
 
-  return data.Items as T[];
+  return this.sanitizeOutputs(data.Items as T[], options);
 }

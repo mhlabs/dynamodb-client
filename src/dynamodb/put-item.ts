@@ -12,6 +12,8 @@ export async function putItem(this: MhDynamoClient, options: PutOptions) {
   options = this.mergeWithGlobalOptions(options);
   this.ensureValid(options, options.item, 'item');
 
+  options.item = this.enrichInput(options.item, options);
+
   const cmdInput: PutCommandInput = {
     TableName: options.tableName,
     Item: options.item,

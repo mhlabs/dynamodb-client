@@ -31,5 +31,5 @@ export async function scan<T>(
     items.push(...(scanResponse.Items as T[]));
   } while (exclusiveStartKey);
 
-  return items;
+  return this.sanitizeOutputs(items, options);
 }

@@ -14,6 +14,8 @@ import { putItem } from './src/dynamodb/put-item';
 import { query, queryByIndex } from './src/dynamodb/query';
 import { remove } from './src/dynamodb/remove';
 import { scan } from './src/dynamodb/scan';
+import { addXrayTraceId } from './src/middlewares/add-xray-trace-id';
+import { removeXrayTraceId } from './src/middlewares/remove-xray-trace-id';
 import {
   BaseFetchOptions,
   BaseOptions,
@@ -101,6 +103,10 @@ export class MhDynamoClient {
   protected ensureValidBatch = ensureValidBatch;
   protected ensureValidBatchWrite = ensureValidBatchWrite;
 
+  // Middlewares
+  protected middlewareRemoveXrayTraceId = removeXrayTraceId;
+  protected middlewareAddXrayTraceId = addXrayTraceId;
+
   // Helpers
   protected mergeWithGlobalOptions<T>(localOptions: T): T {
     const options = { ...localOptions };
@@ -124,12 +130,32 @@ export class MhDynamoClient {
     return options;
   }
 
+  protected sanitizeOutputs<T>(output: T[], options: BaseFetchOptions): T[] {
+    return output.map((i) => {
+      return this.sanitizeOutput(i, options);
+    });
   }
 
+  protected sanitizeOutput<T>(output: T, options: BaseFetchOptions): T {
+    let sanitized = { ...output };
 
+    sanitized = this.middlewareRemoveXrayTraceId(
+      sanitized,
+      options.extractXrayTrace
+    );
+    return sanitized;
   }
 
+  protected enrichInputs<T>(input: T[], options: BaseSaveOptions): T[] {
+    return input.map((i) => {
+      return this.enrichInput(i, options);
+    });
   }
 
+  protected enrichInput<T>(input: T, options: BaseSaveOptions): T {
+    let enriched = { ...input };
 
+    enriched = this.middlewareAddXrayTraceId(enriched, options.injectXrayTrace);
+    return enriched;
+  }
 }
