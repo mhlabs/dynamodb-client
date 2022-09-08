@@ -4,12 +4,15 @@ import { chunk } from '../../array/chunk';
 import { constants } from './constants';
 
 import { MhDynamoClient } from '../..';
+import { sanitizeOutputs } from '../../sanitize';
 import {
   BaseFetchOptions,
   BatchRetryOptions,
   MultiItemOptions
 } from '../../types';
+import { ensureValidBatch } from '../../validation';
 import { filterUniqueKeys } from './duplicate-handling/filter';
+import { execute } from './execute';
 import { parseRetryOptions } from './retry-options';
 
 export interface BatchGetOptions
@@ -41,7 +44,7 @@ export async function batchGet<T>(
   options: BatchGetOptions
 ): Promise<T[]> {
   options = this.mergeWithGlobalOptions(options);
-  this.ensureValidBatch(options, options.keys);
+  ensureValidBatch(options, options.keys);
 
   if (!options.keys.length) return [];
 
@@ -59,7 +62,7 @@ export async function batchGet<T>(
       batch,
       options.batchOptions
     );
-    return this.execute<T>({
+    return execute<T>(this.documentClient, {
       tableName: options.tableName,
       batchCommand: batchGetCommand,
       batchNo: index + 1,
@@ -74,5 +77,5 @@ export async function batchGet<T>(
   const items: T[] = [];
   responses.forEach((response) => items.push(...response));
 
-  return this.sanitizeOutputs(items, options);
+  return sanitizeOutputs(items, options);
 }

@@ -4,17 +4,12 @@ import {
   DynamoDBDocument
 } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
-import { MhDynamoClient } from '../..';
+import { execute } from './execute';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
-let client: MhDynamoClient;
-
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
-  client = MhDynamoClient.fromDocumentClient(
-    dynamoDbDocumentMock as unknown as DynamoDBDocument
-  );
 });
 
 const table = 'testTable';
@@ -55,14 +50,17 @@ describe('execute write', () => {
         })
         .resolves({});
 
-      const res = await client.execute({
-        tableName: table,
-        batchCommand: writeCommand,
-        batchNo: 1,
-        retryCount: 0,
-        retryOptions,
-        previousItems: []
-      });
+      const res = await execute(
+        dynamoDbDocumentMock as unknown as DynamoDBDocument,
+        {
+          tableName: table,
+          batchCommand: writeCommand,
+          batchNo: 1,
+          retryCount: 0,
+          retryOptions,
+          previousItems: []
+        }
+      );
 
       expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
         2
@@ -75,14 +73,17 @@ describe('execute write', () => {
         UnprocessedItems: {}
       });
 
-      const res = await client.execute({
-        tableName: table,
-        batchCommand: writeCommand,
-        batchNo: 1,
-        retryCount: 0,
-        retryOptions,
-        previousItems: []
-      });
+      const res = await execute(
+        dynamoDbDocumentMock as unknown as DynamoDBDocument,
+        {
+          tableName: table,
+          batchCommand: writeCommand,
+          batchNo: 1,
+          retryCount: 0,
+          retryOptions,
+          previousItems: []
+        }
+      );
 
       expect(dynamoDbDocumentMock.commandCalls(BatchWriteCommand)).toHaveLength(
         1
@@ -104,7 +105,7 @@ describe('execute write', () => {
       });
 
       await expect(
-        client.execute({
+        execute(dynamoDbDocumentMock as unknown as DynamoDBDocument, {
           tableName: table,
           batchCommand: writeCommand,
           batchNo: 1,
@@ -160,14 +161,17 @@ describe('execute get', () => {
           }
         });
 
-      const res = await client.execute({
-        tableName: table,
-        batchCommand: getCommand,
-        batchNo: 1,
-        retryCount: 0,
-        retryOptions,
-        previousItems: []
-      });
+      const res = await execute(
+        dynamoDbDocumentMock as unknown as DynamoDBDocument,
+        {
+          tableName: table,
+          batchCommand: getCommand,
+          batchNo: 1,
+          retryCount: 0,
+          retryOptions,
+          previousItems: []
+        }
+      );
 
       expect(dynamoDbDocumentMock.commandCalls(BatchGetCommand)).toHaveLength(
         2
@@ -183,14 +187,17 @@ describe('execute get', () => {
         }
       });
 
-      const res = await client.execute({
-        tableName: table,
-        batchCommand: getCommand,
-        batchNo: 1,
-        retryCount: 0,
-        retryOptions,
-        previousItems: []
-      });
+      const res = await execute(
+        dynamoDbDocumentMock as unknown as DynamoDBDocument,
+        {
+          tableName: table,
+          batchCommand: getCommand,
+          batchNo: 1,
+          retryCount: 0,
+          retryOptions,
+          previousItems: []
+        }
+      );
 
       expect(dynamoDbDocumentMock.commandCalls(BatchGetCommand)).toHaveLength(
         1
@@ -208,7 +215,7 @@ describe('execute get', () => {
       });
 
       await expect(
-        client.execute({
+        execute(dynamoDbDocumentMock as unknown as DynamoDBDocument, {
           tableName: table,
           batchCommand: getCommand,
           batchNo: 1,

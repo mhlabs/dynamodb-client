@@ -3,8 +3,10 @@ import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { MhDynamoClient } from '../..';
 import { chunk } from '../../array/chunk';
 import { BaseOptions, BatchRetryOptions, MultiItemOptions } from '../../types';
+import { ensureValidBatch } from '../../validation';
 import { constants } from './constants';
 import { filterUniqueKeys } from './duplicate-handling/filter';
+import { execute } from './execute';
 import { parseRetryOptions } from './retry-options';
 
 export interface BatchRemoveOptions
@@ -33,7 +35,7 @@ export async function batchRemove(
   options: BatchRemoveOptions
 ): Promise<boolean> {
   options = this.mergeWithGlobalOptions(options);
-  this.ensureValidBatch(options, options.keys);
+  ensureValidBatch(options, options.keys);
 
   if (!options.keys.length) return true;
 
@@ -51,7 +53,7 @@ export async function batchRemove(
       batch
     );
 
-    return this.execute({
+    return execute(this.documentClient, {
       tableName: options.tableName,
       batchCommand: batchWriteCommand,
       batchNo: index + 1,

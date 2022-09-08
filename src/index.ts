@@ -4,9 +4,8 @@ import {
   DynamoDBClientConfig
 } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
-
-import { execute, retryUnprocessedItems } from './dynamodb/batch/execute';
 import { batchGet } from './dynamodb/batch/get';
+
 import { batchRemove } from './dynamodb/batch/remove';
 import { batchWrite } from './dynamodb/batch/write';
 import { getItem } from './dynamodb/get-item';
@@ -14,50 +13,44 @@ import { putItem } from './dynamodb/put-item';
 import { query, queryByIndex } from './dynamodb/query';
 import { remove } from './dynamodb/remove';
 import { scan } from './dynamodb/scan';
-import { addXrayTraceId } from './middlewares/add-xray-trace-id';
-import { removeXrayTraceId } from './middlewares/remove-xray-trace-id';
 import {
   BaseFetchOptions,
   BaseOptions,
   BaseSaveOptions,
   MhDynamoClientOptions
 } from './types';
-import {
-  ensureValid,
-  ensureValidBase,
-  ensureValidBatch,
-  ensureValidBatchWrite,
-  ensureValidQuery
-} from './validation';
 
 export class MhDynamoClient {
   private globalOptions: MhDynamoClientOptions;
   protected documentClient: DynamoDBDocument;
 
   static fromClient(client: DynamoDBClient, options?: MhDynamoClientOptions) {
-    return new MhDynamoClient(client, options);
+    return new MhDynamoClient(client, undefined, options);
   }
 
   static fromConfig(
-    dynamoDbClientConfig: DynamoDBClientConfig,
+    dynamoDbClientConfig?: DynamoDBClientConfig,
     options?: MhDynamoClientOptions
   ) {
+    if (!dynamoDbClientConfig) dynamoDbClientConfig = {};
+
     const client = new DynamoDB(dynamoDbClientConfig);
-    return new MhDynamoClient(client, options);
+    return new MhDynamoClient(client, undefined, options);
   }
 
   static fromDocumentClient(
     dynamoDbDocumentClient: DynamoDBDocument,
     options?: MhDynamoClientOptions
   ) {
-    return new MhDynamoClient(dynamoDbDocumentClient, options);
+    return new MhDynamoClient(undefined, dynamoDbDocumentClient, options);
   }
 
   /**
    * Cannot be initiated. Use MhDynamoClient.fromClient() or MhDynamoClient.fromConfig() instead.
    */
   private constructor(
-    client: DynamoDBClient | DynamoDBDocument,
+    client?: DynamoDBClient,
+    documentClient?: DynamoDBDocument,
     options?: MhDynamoClientOptions
   ) {
     this.globalOptions = {
@@ -66,10 +59,15 @@ export class MhDynamoClient {
       ...options
     };
 
-    if (client as DynamoDBDocument) {
-      this.documentClient = client as DynamoDBDocument;
+    if (documentClient) {
+      this.documentClient = documentClient;
       return this;
     }
+
+    if (!client)
+      throw new Error(
+        'Cannot instantiate without either client or document client set'
+      );
 
     const translateOptions = { ...this.globalOptions.translateConfig };
     if (!translateOptions?.marshallOptions) {
@@ -79,10 +77,7 @@ export class MhDynamoClient {
     }
 
     this.globalOptions.translateConfig = translateOptions;
-    this.documentClient = DynamoDBDocument.from(
-      client as DynamoDBClient,
-      translateOptions
-    );
+    this.documentClient = DynamoDBDocument.from(client, translateOptions);
   }
 
   // Public methods
@@ -95,21 +90,6 @@ export class MhDynamoClient {
   public scan = scan;
   public query = query;
   public queryByIndex = queryByIndex;
-
-  // Internal methods
-  public execute = execute; // Public because of test
-  protected retryUnprocessedItems = retryUnprocessedItems;
-
-  // Validation
-  protected ensureValidBase = ensureValidBase;
-  protected ensureValid = ensureValid;
-  protected ensureValidQuery = ensureValidQuery;
-  protected ensureValidBatch = ensureValidBatch;
-  protected ensureValidBatchWrite = ensureValidBatchWrite;
-
-  // Middlewares
-  protected middlewareRemoveXrayTraceId = removeXrayTraceId;
-  protected middlewareAddXrayTraceId = addXrayTraceId;
 
   // Helpers
   protected mergeWithGlobalOptions<T>(localOptions: T): T {
@@ -132,34 +112,5 @@ export class MhDynamoClient {
       }
     }
     return options;
-  }
-
-  protected sanitizeOutputs<T>(output: T[], options: BaseFetchOptions): T[] {
-    return output.map((i) => {
-      return this.sanitizeOutput(i, options);
-    });
-  }
-
-  protected sanitizeOutput<T>(output: T, options: BaseFetchOptions): T {
-    let sanitized = { ...output };
-
-    sanitized = this.middlewareRemoveXrayTraceId(
-      sanitized,
-      options.extractXrayTrace
-    );
-    return sanitized;
-  }
-
-  protected enrichInputs<T>(input: T[], options: BaseSaveOptions): T[] {
-    return input.map((i) => {
-      return this.enrichInput(i, options);
-    });
-  }
-
-  protected enrichInput<T>(input: T, options: BaseSaveOptions): T {
-    let enriched = { ...input };
-
-    enriched = this.middlewareAddXrayTraceId(enriched, options.injectXrayTrace);
-    return enriched;
   }
 }

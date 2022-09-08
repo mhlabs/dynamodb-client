@@ -1,6 +1,8 @@
 import { GetCommand, GetCommandInput } from '@aws-sdk/lib-dynamodb';
 import { MhDynamoClient } from '../index';
+import { sanitizeOutput } from '../sanitize';
 import { BaseFetchOptions, SingleItemOptions } from '../types';
+import { ensureValid } from '../validation';
 
 export interface GetOptions
   extends BaseFetchOptions,
@@ -12,7 +14,7 @@ export async function getItem<T>(
   this: MhDynamoClient,
   options: GetOptions
 ): Promise<T | null> {
-  this.ensureValid(options, options.key, 'key');
+  ensureValid(options, options.key, 'key');
 
   const cmdInput: GetCommandInput = {
     TableName: options.tableName,
@@ -23,7 +25,5 @@ export async function getItem<T>(
   const command = new GetCommand(cmdInput);
   const response = await this.documentClient.send(command);
 
-  return !response?.Item
-    ? null
-    : this.sanitizeOutput(response?.Item as T, options);
+  return !response?.Item ? null : sanitizeOutput(response?.Item as T, options);
 }

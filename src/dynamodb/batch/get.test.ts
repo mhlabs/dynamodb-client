@@ -1,8 +1,11 @@
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import { MhDynamoClient } from '../..';
 import { constants } from './constants';
+import { execute } from './execute';
 
-const executeMock = jest.fn();
+jest.mock('./execute');
+const executeMock = jest.mocked(execute);
+
 let client: MhDynamoClient;
 
 beforeEach(() => {
@@ -10,10 +13,9 @@ beforeEach(() => {
   jest.restoreAllMocks();
   executeMock.mockResolvedValue([]);
   client = MhDynamoClient.fromDocumentClient({} as unknown as DynamoDBDocument);
-  client.execute = executeMock;
 });
 
-describe('batch get', () => {
+describe('batchGet', () => {
   it('should split keys into chunks of max batch size (batchWrite limit)', async () => {
     const arrayLength = constants.MAX_KEYS_PER_BATCH_GET * 2 + 10;
     const keys = Array.from(Array(arrayLength), (_, index) => ({
@@ -27,15 +29,15 @@ describe('batch get', () => {
 
     expect(executeMock).toHaveBeenCalledTimes(3);
 
-    const firstRequest = executeMock.mock.calls[0][0].batchCommand.input
+    const firstRequest = executeMock.mock.calls[0][1].batchCommand.input
       .RequestItems?.testTable as any;
     expect(firstRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
-    const secondRequest = executeMock.mock.calls[1][0].batchCommand.input
+    const secondRequest = executeMock.mock.calls[1][1].batchCommand.input
       .RequestItems?.testTable as any;
     expect(secondRequest.Keys).toHaveLength(constants.MAX_KEYS_PER_BATCH_GET);
 
-    const thirdRequest = executeMock.mock.calls[2][0].batchCommand.input
+    const thirdRequest = executeMock.mock.calls[2][1].batchCommand.input
       .RequestItems?.testTable as any;
     expect(thirdRequest.Keys).toHaveLength(10);
 

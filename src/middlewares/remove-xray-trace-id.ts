@@ -1,11 +1,6 @@
-import { MhDynamoClient } from '..';
 import { WithXrayTraceId } from '../types';
 
-export function removeXrayTraceId<T>(
-  this: MhDynamoClient,
-  item: T,
-  extractXrayTrace?: boolean
-): T {
+export function removeXrayTraceId<T>(item: T, extractXrayTrace?: boolean): T {
   if (!extractXrayTrace) return item;
   if (!('_xray_trace_id' in item)) return item;
 

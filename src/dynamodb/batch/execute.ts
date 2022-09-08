@@ -2,9 +2,9 @@ import {
   BatchGetCommand,
   BatchGetCommandOutput,
   BatchWriteCommand,
-  BatchWriteCommandOutput
+  BatchWriteCommandOutput,
+  DynamoDBDocument
 } from '@aws-sdk/lib-dynamodb';
-import { MhDynamoClient } from '../..';
 import { BaseOptions } from '../../types';
 
 import { randomInteger } from '../../randomizer/random-integer';
@@ -58,7 +58,7 @@ const createRetryCommandFromResponse = (
 };
 
 export async function retryUnprocessedItems<T>(
-  this: MhDynamoClient,
+  client: DynamoDBDocument,
   options: ExecuteOptions<T>,
   response: BatchGetCommandOutput | BatchWriteCommandOutput
 ): Promise<T[]> {
@@ -86,17 +86,17 @@ export async function retryUnprocessedItems<T>(
   });
 
   const command = createRetryCommandFromResponse(response);
-  return await this.execute<T>({ ...options, batchCommand: command });
+  return await execute<T>(client, { ...options, batchCommand: command });
 }
 
 export async function execute<T>(
-  this: MhDynamoClient,
+  client: DynamoDBDocument,
   options: ExecuteOptions<T>
 ): Promise<T[]> {
   let items: T[] = [...options.previousItems];
 
   const response: BatchGetCommandOutput | BatchWriteCommandOutput =
-    await this.documentClient.send(options.batchCommand as any);
+    await client.send(options.batchCommand as any);
 
   if ('Responses' in response) {
     if (response.Responses && response.Responses[options.tableName as string]) {
@@ -105,7 +105,8 @@ export async function execute<T>(
   }
 
   if (!needsRetry(response)) return items;
-  items = await this.retryUnprocessedItems<T>(
+  items = await retryUnprocessedItems<T>(
+    client,
     { ...options, previousItems: items, retryCount: ++options.retryCount },
     response
   );

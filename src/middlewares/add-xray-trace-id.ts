@@ -1,10 +1,8 @@
-import { MhDynamoClient } from '..';
 import { WithXrayTraceId } from '../types';
 
 export const _X_AMZN_TRACE_ID = '_X_AMZN_TRACE_ID';
 
 export function addXrayTraceId<T>(
-  this: MhDynamoClient,
   item: T,
   injectXrayTrace?: boolean
 ): WithXrayTraceId<T> | T {

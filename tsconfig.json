@@ -5,8 +5,6 @@
     "sourceMap": true,
     "noEmit": true,
     "noImplicitAny": false,
-    "resolveJsonModule": true,
-    "outDir": "./dist"
-  },
-  "exclude": ["./dist/**/*", "*.config.ts", "*.test.ts"]
+    "resolveJsonModule": true
+  }
 }

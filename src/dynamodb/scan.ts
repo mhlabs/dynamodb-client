@@ -1,6 +1,8 @@
 import { ScanCommand, ScanCommandInput } from '@aws-sdk/lib-dynamodb';
 import { MhDynamoClient } from '../index';
+import { sanitizeOutputs } from '../sanitize';
 import { BaseFetchOptions } from '../types';
+import { ensureValidBase } from '../validation';
 
 export interface ScanOptions extends BaseFetchOptions {
   commandOptions?: ScanCommandInput;
@@ -11,7 +13,7 @@ export async function scan<T>(
   options: ScanOptions
 ): Promise<T[]> {
   options = this.mergeWithGlobalOptions<ScanOptions>(options);
-  this.ensureValidBase(options);
+  ensureValidBase(options);
 
   const items: T[] = [];
   let exclusiveStartKey: { [key: string]: any } | undefined;
@@ -31,5 +33,5 @@ export async function scan<T>(
     items.push(...(scanResponse.Items as T[]));
   } while (exclusiveStartKey);
 
-  return this.sanitizeOutputs(items, options);
+  return sanitizeOutputs(items, options);
 }

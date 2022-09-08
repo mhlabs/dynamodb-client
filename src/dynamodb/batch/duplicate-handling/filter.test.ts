@@ -1,5 +1,5 @@
 import * as tested from './filter';
-import * as testData from './filter.test-data.json';
+import { testData } from './filter.test-data';
 
 describe('filter duplicates', () => {
   it('should filter out duplicate keys', () => {

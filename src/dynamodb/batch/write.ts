@@ -2,17 +2,20 @@ import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
 import { MhDynamoClient } from '../..';
 import { chunk } from '../../array/chunk';
+import { enrichInputs } from '../../enrich';
 import {
   BaseSaveOptions,
   BatchRetryOptions,
   MultiItemOptions
 } from '../../types';
+import { ensureValidBatchWrite } from '../../validation';
 import { constants } from './constants';
 import {
   defaultDuplicateOptions,
   DuplicateOptions,
   filterUniqueObjects
 } from './duplicate-handling/filter';
+import { execute } from './execute';
 import { parseRetryOptions } from './retry-options';
 
 export interface BatchWriteOptions
@@ -43,7 +46,7 @@ export async function batchWrite(
   options: BatchWriteOptions
 ): Promise<boolean> {
   options = this.mergeWithGlobalOptions(options);
-  this.ensureValidBatchWrite(options, options.items);
+  ensureValidBatchWrite(options, options.items);
   if (!options.items.length) return true;
 
   const commandOptions = { ...defaultDuplicateOptions, ...options.options };
@@ -57,13 +60,13 @@ export async function batchWrite(
   );
 
   const runBatches = chunkedItems.map((batch, index) => {
-    batch = this.enrichInputs(batch, options);
+    batch = enrichInputs(batch, options);
     const batchWriteCommand = createBatchWriteCommand(
       options.tableName as string,
       batch
     );
 
-    return this.execute({
+    return execute(this.documentClient, {
       tableName: options.tableName,
       batchCommand: batchWriteCommand,
       batchNo: index + 1,

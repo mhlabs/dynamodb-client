@@ -1,6 +1,8 @@
 import { QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { MhDynamoClient } from '..';
+import { sanitizeOutputs } from '../sanitize';
 import { BaseFetchOptions } from '../types';
+import { ensureValid, ensureValidQuery } from '../validation';
 
 export interface QueryOptions extends BaseFetchOptions {
   keyCondition: Record<string, any>;
@@ -52,12 +54,12 @@ export async function query<T>(
   options: Omit<QueryOptions, 'indexName'>
 ): Promise<T[]> {
   options = this.mergeWithGlobalOptions(options);
-  this.ensureValid(options, options.keyCondition, 'keyCondition');
+  ensureValid(options, options.keyCondition, 'keyCondition');
 
   const command = createCommand({ ...options, indexName: '' });
   const data = await this.documentClient.send(command);
 
-  return this.sanitizeOutputs(data.Items as T[], options);
+  return sanitizeOutputs(data.Items as T[], options);
 }
 
 export async function queryByIndex<T>(
@@ -65,10 +67,10 @@ export async function queryByIndex<T>(
   options: QueryOptions
 ): Promise<T[]> {
   options = this.mergeWithGlobalOptions(options);
-  this.ensureValidQuery(options, options.keyCondition, options.indexName);
+  ensureValidQuery(options, options.keyCondition, options.indexName);
 
   const command = createCommand(options);
   const data = await this.documentClient.send(command);
 
-  return this.sanitizeOutputs(data.Items as T[], options);
+  return sanitizeOutputs(data.Items as T[], options);
 }

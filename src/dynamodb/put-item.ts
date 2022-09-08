@@ -1,6 +1,8 @@
 import { PutCommand, PutCommandInput } from '@aws-sdk/lib-dynamodb';
+import { enrichInput } from '../enrich';
 import { MhDynamoClient } from '../index';
 import { BaseSaveOptions, SingleItemOptions } from '../types';
+import { ensureValid } from '../validation';
 
 export interface PutOptions
   extends BaseSaveOptions,
@@ -10,9 +12,9 @@ export interface PutOptions
 
 export async function putItem(this: MhDynamoClient, options: PutOptions) {
   options = this.mergeWithGlobalOptions(options);
-  this.ensureValid(options, options.item, 'item');
+  ensureValid(options, options.item, 'item');
 
-  options.item = this.enrichInput(options.item, options);
+  options.item = enrichInput(options.item, options);
 
   const cmdInput: PutCommandInput = {
     TableName: options.tableName,
