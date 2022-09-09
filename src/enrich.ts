@@ -10,6 +10,6 @@ export function enrichInputs<T>(input: T[], options: BaseSaveOptions): T[] {
 export function enrichInput<T>(input: T, options: BaseSaveOptions): T {
   let enriched = { ...input };
 
-  enriched = addXrayTraceId(enriched, options.injectXrayTrace);
+  if (options.injectXrayTrace) enriched = addXrayTraceId(enriched);
   return enriched;
 }

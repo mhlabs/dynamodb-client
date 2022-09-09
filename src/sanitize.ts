@@ -13,6 +13,6 @@ export function sanitizeOutputs<T>(
 export function sanitizeOutput<T>(output: T, options: BaseFetchOptions): T {
   let sanitized = { ...output };
 
-  sanitized = removeXrayTraceId(sanitized, options.extractXrayTrace);
+  if (options.extractXrayTrace) sanitized = removeXrayTraceId(sanitized);
   return sanitized;
 }

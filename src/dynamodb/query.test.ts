@@ -15,7 +15,9 @@ interface DynamoItem {
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
-  dynamoDbDocumentMock.on(QueryCommand).resolves({ Items: [{ SomeValue: 1 }] });
+  dynamoDbDocumentMock
+    .on(QueryCommand)
+    .resolves({ Items: [{ SomeValue: 1, _xray_trace_id: 'trace' }] });
   client = MhDynamoClient.fromDocumentClient(
     dynamoDbDocumentMock as unknown as DynamoDBDocument
   );
@@ -29,7 +31,23 @@ describe('query', () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0].SomeValue).toBe(1);
+    expect(result[0]).toEqual({
+      SomeValue: 1
+    });
+  });
+
+  it('should return items with trace id', async () => {
+    const result = await client.query<DynamoItem>({
+      tableName: table,
+      keyCondition: {},
+      extractXrayTrace: false
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      SomeValue: 1,
+      _xray_trace_id: 'trace'
+    });
   });
 
   it('should apply index name for index query', async () => {

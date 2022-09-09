@@ -24,7 +24,9 @@ beforeEach(() => {
 
 describe('scan', () => {
   it('should return items', async () => {
-    dynamoDbDocumentMock.on(ScanCommand).resolves({ Items: [{ id: 5 }] });
+    dynamoDbDocumentMock
+      .on(ScanCommand)
+      .resolves({ Items: [{ id: 5, _xray_trace_id: 'trace' }] });
 
     const result = await client.scan<DynamoItem>({
       tableName: 'table'
@@ -32,7 +34,27 @@ describe('scan', () => {
 
     expect(dynamoDbDocumentMock.commandCalls(ScanCommand)).toHaveLength(1);
     expect(result).toHaveLength(1);
-    expect(result[0].id).toEqual(5);
+    expect(result[0]).toEqual({
+      id: 5
+    });
+  });
+
+  it('should return items with trace id', async () => {
+    dynamoDbDocumentMock
+      .on(ScanCommand)
+      .resolves({ Items: [{ id: 5, _xray_trace_id: 'trace' }] });
+
+    const result = await client.scan<DynamoItem>({
+      tableName: 'table',
+      extractXrayTrace: false
+    });
+
+    expect(dynamoDbDocumentMock.commandCalls(ScanCommand)).toHaveLength(1);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      id: 5,
+      _xray_trace_id: 'trace'
+    });
   });
 
   it('should fetch remaining items', async () => {

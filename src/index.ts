@@ -24,6 +24,11 @@ export class MhDynamoClient {
   private globalOptions: MhDynamoClientOptions;
   protected documentClient: DynamoDBDocument;
 
+  private defaultOptions: MhDynamoClientOptions = {
+    injectXrayTrace: true,
+    extractXrayTrace: true
+  };
+
   static fromClient(client: DynamoDBClient, options?: MhDynamoClientOptions) {
     return new MhDynamoClient(client, undefined, options);
   }
@@ -32,9 +37,7 @@ export class MhDynamoClient {
     dynamoDbClientConfig?: DynamoDBClientConfig,
     options?: MhDynamoClientOptions
   ) {
-    if (!dynamoDbClientConfig) dynamoDbClientConfig = {};
-
-    const client = new DynamoDB(dynamoDbClientConfig);
+    const client = new DynamoDB(dynamoDbClientConfig || {});
     return new MhDynamoClient(client, undefined, options);
   }
 
@@ -46,7 +49,11 @@ export class MhDynamoClient {
   }
 
   /**
-   * Cannot be initiated. Use MhDynamoClient.fromClient() or MhDynamoClient.fromConfig() instead.
+   * Cannot be initiated. Use either of the following instead:
+   *
+   * - MhDynamoClient.fromConfig()
+   * - MhDynamoClient.fromClient()
+   * - MhDynamoClient.fromDocumentClient()
    */
   private constructor(
     client?: DynamoDBClient,
@@ -54,8 +61,7 @@ export class MhDynamoClient {
     options?: MhDynamoClientOptions
   ) {
     this.globalOptions = {
-      injectXrayTrace: true,
-      extractXrayTrace: true,
+      ...this.defaultOptions,
       ...options
     };
 

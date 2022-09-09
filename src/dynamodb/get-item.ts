@@ -14,6 +14,7 @@ export async function getItem<T>(
   this: MhDynamoClient,
   options: GetOptions
 ): Promise<T | null> {
+  options = this.mergeWithGlobalOptions(options);
   ensureValid(options, options.key, 'key');
 
   const cmdInput: GetCommandInput = {

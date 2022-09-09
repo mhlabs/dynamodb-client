@@ -22,14 +22,35 @@ beforeEach(() => {
 
 describe('get-item', () => {
   it('should return item', async () => {
-    dynamoDbDocumentMock.on(GetCommand).resolves({ Item: { Id: 5 } });
+    dynamoDbDocumentMock
+      .on(GetCommand)
+      .resolves({ Item: { Id: 5, _xray_trace_id: 'trace' } });
 
     const result = await client.getItem<DynamoItem>({
       tableName: 'table',
       key: {}
     });
 
-    expect(result?.Id).toEqual(5);
+    expect(result).toEqual({
+      Id: 5
+    });
+  });
+
+  it('should not sanitize item', async () => {
+    dynamoDbDocumentMock
+      .on(GetCommand)
+      .resolves({ Item: { Id: 5, _xray_trace_id: 'trace' } });
+
+    const result = await client.getItem<DynamoItem>({
+      tableName: 'table',
+      key: {},
+      extractXrayTrace: false
+    });
+
+    expect(result).toEqual({
+      Id: 5,
+      _xray_trace_id: 'trace'
+    });
   });
 
   it('should handle null repsonse', async () => {
