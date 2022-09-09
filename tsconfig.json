@@ -3,8 +3,16 @@
   "compilerOptions": {
     "preserveConstEnums": true,
     "sourceMap": true,
-    "noEmit": true,
     "noImplicitAny": false,
-    "resolveJsonModule": true
-  }
+    "resolveJsonModule": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "./src"
+  },
+  "exclude": [
+    "./dist/**/*",
+    "./integration-tests/**/*",
+    "*.config.ts",
+    "*.test.ts"
+  ]
 }

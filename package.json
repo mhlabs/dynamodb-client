@@ -1,8 +1,9 @@
 {
   "name": "@mhlabs/dynamodb-client",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "A lib to simplify working with dynamodb document client in aws sdk v3.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -11,6 +12,7 @@
     "coverage": "jest ./src --coverage",
     "integration-tests": "jest ./integration-tests",
     "build": "node ./scripts/build.js",
+    "postbuild": "tsc --emitDeclarationOnly --declaration",
     "compile": "tsc"
   },
   "keywords": [
