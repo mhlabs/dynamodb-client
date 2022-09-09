@@ -1,5 +1,7 @@
-node_modules/
-coverage/
-.DS_Store
-.aws-sam/
-.idea/
+*
+
+!/dist/**/*
+
+!/package.json
+!/CHANGELOG.md
+!/LICENCE
