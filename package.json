@@ -1,6 +1,6 @@
 {
   "name": "@mhlabs/dynamodb-client",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "A lib to simplify working with dynamodb document client in aws sdk v3.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +11,7 @@
     "test": "jest ./src",
     "coverage": "jest ./src --coverage",
     "integration-tests": "jest ./integration-tests",
+    "prebuild": "rm -rf ./dist",
     "build": "node ./scripts/build.js",
     "postbuild": "tsc --emitDeclarationOnly --declaration",
     "compile": "tsc"
@@ -23,21 +24,28 @@
   ],
   "author": "mhlabs",
   "license": "ISC",
+  "babel": {
+    "presets": [
+      "@babel/preset-typescript"
+    ]
+  },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.165.0",
     "@aws-sdk/lib-dynamodb": "^3.165.0"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.18.6",
     "@tsconfig/node16": "^1.0.3",
     "@types/jest": "^27.4.1",
     "aws-sdk-client-mock": "^2.0.0",
+    "babel-jest": "^29.0.2",
     "esbuild": "^0.15.7",
+    "esbuild-jest": "^0.5.0",
     "eslint": "^8.23.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^27.5.1",
     "prettier": "^2.7.1",
-    "ts-jest": "^27.1.4",
     "typescript": "^4.7.4"
   },
   "publishConfig": {

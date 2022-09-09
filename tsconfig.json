@@ -7,12 +7,16 @@
     "resolveJsonModule": true,
     "declaration": true,
     "outDir": "dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "allowJs": true
   },
   "exclude": [
     "./dist/**/*",
     "./integration-tests/**/*",
+    "./scripts/**/*",
     "*.config.ts",
-    "*.test.ts"
+    "*.config.js",
+    "jest-set-env.js",
+    "**/*.test.ts"
   ]
 }
