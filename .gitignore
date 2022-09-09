@@ -3,3 +3,4 @@ coverage/
 .DS_Store
 .aws-sam/
 .idea/
+dist
