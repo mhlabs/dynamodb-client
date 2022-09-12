@@ -12,7 +12,10 @@
   "exclude": [
     "./dist/**/*",
     "./integration-tests/**/*",
+    "./scripts/**/*",
     "*.config.ts",
-    "*.test.ts"
+    "*.config.js",
+    "jest-set-env.js",
+    "**/*.test.ts"
   ]
 }
