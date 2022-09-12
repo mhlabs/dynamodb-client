@@ -6,8 +6,7 @@
 /** @type {import('@jest/types').Config.InitialOptions} */
 const config = {
   transform: {
-    '^.+\\.ts?$': 'esbuild-jest',
-    '^.+\\.(js|jsx)$': 'babel-jest'
+    '^.+\\.ts?$': 'esbuild-jest'
   },
   clearMocks: true,
   testMatch: ['**/*.test.ts'],
