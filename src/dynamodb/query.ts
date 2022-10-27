@@ -56,10 +56,18 @@ export async function query<T>(
   options = this.mergeWithGlobalOptions(options);
   ensureValid(options, options.keyCondition, 'keyCondition');
 
-  const command = createCommand({ ...options, indexName: '' });
-  const data = await this.documentClient.send(command);
+  const items: T[] = [];
+  let exclusiveStartKey: { [key: string]: any } | undefined;
 
-  return sanitizeOutputs(data.Items as T[], options);
+  do {
+    const command = createCommand({ ...options, indexName: '' });
+    const response = await this.documentClient.send(command);
+
+    exclusiveStartKey = response.LastEvaluatedKey;
+    items.push(...(response.Items as T[]));
+  } while (exclusiveStartKey);
+
+  return sanitizeOutputs(items, options);
 }
 
 export async function queryByIndex<T>(
@@ -69,8 +77,16 @@ export async function queryByIndex<T>(
   options = this.mergeWithGlobalOptions(options);
   ensureValidQuery(options, options.keyCondition, options.indexName);
 
-  const command = createCommand(options);
-  const data = await this.documentClient.send(command);
+  const items: T[] = [];
+  let exclusiveStartKey: { [key: string]: any } | undefined;
 
-  return sanitizeOutputs(data.Items as T[], options);
+  do {
+    const command = createCommand(options);
+    const response = await this.documentClient.send(command);
+
+    exclusiveStartKey = response.LastEvaluatedKey;
+    items.push(...(response.Items as T[]));
+  } while (exclusiveStartKey);
+
+  return sanitizeOutputs(items, options);
 }

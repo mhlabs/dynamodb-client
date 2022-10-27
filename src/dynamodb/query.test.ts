@@ -1,4 +1,8 @@
-import { DynamoDBDocument, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocument,
+  QueryCommand,
+  QueryCommandOutput
+} from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 
 const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
@@ -13,11 +17,22 @@ interface DynamoItem {
   SomeValue: number;
 }
 
+const dynamoResponse1: QueryCommandOutput = {
+  Items: [{ SomeValue: 1, _xray_trace_id: 'trace' }],
+  $metadata: {},
+  LastEvaluatedKey: { SomeValue: 1 }
+};
+
+const dynamoResponse2 = {
+  Items: [{ SomeValue: 2, _xray_trace_id: 'trace' }]
+};
+
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
   dynamoDbDocumentMock
     .on(QueryCommand)
-    .resolves({ Items: [{ SomeValue: 1, _xray_trace_id: 'trace' }] });
+    .resolvesOnce(dynamoResponse1)
+    .resolvesOnce(dynamoResponse2);
   client = MhDynamoClient.fromDocumentClient(
     dynamoDbDocumentMock as unknown as DynamoDBDocument
   );
@@ -30,10 +45,15 @@ describe('query', () => {
       keyCondition: {}
     });
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      SomeValue: 1
-    });
+    expect(result).toHaveLength(2);
+    expect(result).toEqual([
+      {
+        SomeValue: 1
+      },
+      {
+        SomeValue: 2
+      }
+    ]);
   });
 
   it('should return items with trace id', async () => {
@@ -43,7 +63,7 @@ describe('query', () => {
       extractXrayTrace: false
     });
 
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       SomeValue: 1,
       _xray_trace_id: 'trace'
@@ -51,7 +71,7 @@ describe('query', () => {
   });
 
   it('should apply index name for index query', async () => {
-    await client.queryByIndex<DynamoItem>({
+    const result = await client.queryByIndex<DynamoItem>({
       tableName: table,
       keyCondition: {},
       indexName: 'index'
@@ -60,6 +80,7 @@ describe('query', () => {
     const appliedArguments =
       dynamoDbDocumentMock.commandCalls(QueryCommand)[0].args[0].input;
 
+    expect(result).toHaveLength(2);
     expect(appliedArguments.TableName).toBe(table);
     expect(appliedArguments.IndexName).toBe('index');
   });
