@@ -10,6 +10,7 @@ const dynamoDbDocumentMock = mockClient(DynamoDBDocument);
 
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
+  jest.resetAllMocks();
 });
 
 const table = 'testTable';
@@ -231,5 +232,38 @@ describe('execute get', () => {
         3
       );
     });
+  });
+});
+
+describe('delay between calls', () => {
+  it('should use option for delay', async () => {
+    jest.spyOn(global, 'setTimeout');
+
+    const getCommand = new BatchGetCommand({
+      RequestItems: {
+        [table]: {
+          Keys: []
+        }
+      }
+    });
+
+    dynamoDbDocumentMock.on(BatchGetCommand).resolves({
+      Responses: {
+        [table]: [{ id: 1 }]
+      }
+    });
+
+    await execute(dynamoDbDocumentMock as unknown as DynamoDBDocument, {
+      tableName: table,
+      batchCommand: getCommand,
+      batchNo: 1,
+      retryCount: 0,
+      retryOptions,
+      delayMsBetweenCalls: 2,
+      previousItems: []
+    });
+
+    expect(setTimeout).toHaveBeenCalledTimes(1);
+    expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 2);
   });
 });

@@ -12,7 +12,9 @@ import { parseRetryOptions } from './retry-options';
 export interface BatchRemoveOptions
   extends BaseOptions,
     BatchRetryOptions,
-    Omit<MultiItemOptions, 'items'> {}
+    Omit<MultiItemOptions, 'items'> {
+  delayMsBetweenCalls?: number;
+}
 
 const createBatchDeleteCommand = (
   tableName: string,
@@ -59,7 +61,8 @@ export async function batchRemove(
       batchNo: index + 1,
       retryCount: 0,
       retryOptions,
-      previousItems: []
+      previousItems: [],
+      delayMsBetweenCalls: options.delayMsBetweenCalls
     });
   });
 

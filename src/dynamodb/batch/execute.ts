@@ -16,6 +16,7 @@ export interface ExecuteOptions<T> extends BaseOptions {
   batchNo: number;
   retryCount: number;
   retryOptions: RetryOptions;
+  delayMsBetweenCalls?: number;
   previousItems: T[];
 }
 
@@ -81,12 +82,14 @@ export async function retryUnprocessedItems<T>(
     `UnprocessedItems, retrying after waiting ${randomTimeoutToAvoidThrottling} ms, attempt ${options.retryCount})...`
   );
 
-  await new Promise((r) => {
-    setTimeout(r, randomTimeoutToAvoidThrottling);
-  });
+  await sleep(randomTimeoutToAvoidThrottling);
 
   const command = createRetryCommandFromResponse(response);
   return await execute<T>(client, { ...options, batchCommand: command });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function execute<T>(
@@ -103,6 +106,8 @@ export async function execute<T>(
       items.push(...(response.Responses[options.tableName as string] as T[]));
     }
   }
+
+  if (options.delayMsBetweenCalls) await sleep(options.delayMsBetweenCalls);
 
   if (!needsRetry(response)) return items;
   items = await retryUnprocessedItems<T>(

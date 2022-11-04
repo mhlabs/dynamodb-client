@@ -23,6 +23,7 @@ export interface BatchWriteOptions
     BatchRetryOptions,
     Omit<MultiItemOptions, 'keys'> {
   options?: DuplicateOptions;
+  delayMsBetweenCalls?: number;
 }
 
 const createBatchWriteCommand = (
@@ -72,7 +73,8 @@ export async function batchWrite(
       batchNo: index + 1,
       retryCount: 0,
       retryOptions,
-      previousItems: []
+      previousItems: [],
+      delayMsBetweenCalls: options.delayMsBetweenCalls
     });
   });
 
