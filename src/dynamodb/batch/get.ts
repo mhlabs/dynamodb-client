@@ -20,6 +20,7 @@ export interface BatchGetOptions
     BatchRetryOptions,
     Omit<MultiItemOptions, 'items'> {
   batchOptions?: Record<string, any>;
+  delayMsBetweenCalls?: number;
 }
 
 const createBatchGetCommand = (
@@ -68,7 +69,8 @@ export async function batchGet<T>(
       batchNo: index + 1,
       retryCount: 0,
       retryOptions,
-      previousItems: []
+      previousItems: [],
+      delayMsBetweenCalls: options.delayMsBetweenCalls
     });
   });
 
