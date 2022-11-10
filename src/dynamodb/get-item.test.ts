@@ -13,6 +13,8 @@ interface DynamoItem {
   Id: number;
 }
 
+jest.useFakeTimers().setSystemTime(new Date("2022-11-10"));
+
 beforeEach(() => {
   dynamoDbDocumentMock.reset();
   client = MhDynamoClient.fromDocumentClient(
@@ -24,7 +26,7 @@ describe('get-item', () => {
   it('should return item', async () => {
     dynamoDbDocumentMock
       .on(GetCommand)
-      .resolves({ Item: { Id: 5, _xray_trace_id: 'trace' } });
+      .resolves({ Item: { Id: 5, _xray_trace_id: 'trace', _last_modified: (new Date()).toISOString() } });
 
     const result = await client.getItem<DynamoItem>({
       tableName: 'table',
@@ -36,10 +38,10 @@ describe('get-item', () => {
     });
   });
 
-  it('should not sanitize item', async () => {
+  it('should not sanitize xray trace', async () => {
     dynamoDbDocumentMock
-      .on(GetCommand)
-      .resolves({ Item: { Id: 5, _xray_trace_id: 'trace' } });
+        .on(GetCommand)
+        .resolves({ Item: { Id: 5, _xray_trace_id: 'trace' } });
 
     const result = await client.getItem<DynamoItem>({
       tableName: 'table',
@@ -53,7 +55,24 @@ describe('get-item', () => {
     });
   });
 
-  it('should handle null repsonse', async () => {
+  it('should not sanitize last modified at', async () => {
+    dynamoDbDocumentMock
+        .on(GetCommand)
+        .resolves({ Item: { Id: 5, _last_modified: (new Date()).toISOString() } });
+
+    const result = await client.getItem<DynamoItem>({
+      tableName: 'table',
+      key: {},
+      extractLastModified: false
+    });
+
+    expect(result).toEqual({
+      Id: 5,
+      _last_modified: (new Date()).toISOString()
+    });
+  });
+
+  it('should handle null response', async () => {
     dynamoDbDocumentMock.on(GetCommand).resolves(null as any);
 
     const result = await client.getItem<DynamoItem>({

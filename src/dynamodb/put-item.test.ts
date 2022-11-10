@@ -12,6 +12,8 @@ import { MhDynamoClient } from '..';
 let client: MhDynamoClient;
 const env = process.env;
 
+jest.useFakeTimers().setSystemTime(new Date("2022-11-10"));
+
 beforeEach(() => {
   process.env = { ...env };
   dynamoDbDocumentMock.reset();
@@ -30,7 +32,7 @@ describe('put', () => {
     const options = {
       ConditionExpression: 'the condition'
     } as PutCommandInput;
-    const item = { Id: 'x' };
+    const item = { Id: 'x', _last_modified: (new Date()).toISOString() };
 
     const result = await client.putItem({
       tableName: table,
@@ -46,6 +48,28 @@ describe('put', () => {
       options.ConditionExpression
     );
     expect(appliedArguments.Item).toEqual(item);
+    expect(result).toBe(true);
+  });
+
+  it('should always enrich with _last_modified', async () => {
+    const table = 'table';
+    const options = {
+      ConditionExpression: 'the condition'
+    } as PutCommandInput;
+    const item = { Id: 'x' };
+
+    const result = await client.putItem({
+      tableName: table,
+      item,
+      commandOptions: options
+    });
+
+    const appliedArguments =
+        dynamoDbDocumentMock.commandCalls(PutCommand)[0].args[0].input;
+    expect(appliedArguments.Item).toEqual({
+      ...item,
+      _last_modified: (new Date()).toISOString(),
+    });
     expect(result).toBe(true);
   });
 
@@ -67,7 +91,8 @@ describe('put', () => {
       dynamoDbDocumentMock.commandCalls(PutCommand)[0].args[0].input;
     expect(appliedArguments.Item).toEqual({
       ...item,
-      _xray_trace_id: 'trace'
+      _xray_trace_id: 'trace',
+      _last_modified: (new Date()).toISOString(),
     });
     expect(result).toBe(true);
   });
@@ -84,7 +109,8 @@ describe('put', () => {
       tableName: table,
       item,
       commandOptions: options,
-      injectXrayTrace: false
+      injectXrayTrace: false,
+      injectLastModified: false,
     });
 
     const appliedArguments =

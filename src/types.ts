@@ -5,6 +5,8 @@ export interface MhDynamoClientOptions {
   tableName?: string;
   injectXrayTrace?: boolean;
   extractXrayTrace?: boolean;
+  injectLastModified?: boolean;
+  extractLastModified?: boolean;
 }
 
 export interface BaseOptions {
@@ -13,10 +15,12 @@ export interface BaseOptions {
 
 export interface BaseSaveOptions extends BaseOptions {
   injectXrayTrace?: boolean;
+  injectLastModified?: boolean;
 }
 
 export interface BaseFetchOptions extends BaseOptions {
   extractXrayTrace?: boolean;
+  extractLastModified?: boolean;
 }
 
 export interface BatchRetryOptions {
@@ -35,3 +39,5 @@ export interface MultiItemOptions {
 }
 
 export type WithXrayTraceId<T> = T & { _xray_trace_id?: string };
+
+export type WithLastModified<T> = T & { _last_modified: string };
