@@ -26,7 +26,9 @@ export class MhDynamoClient {
 
   private defaultOptions: MhDynamoClientOptions = {
     injectXrayTrace: true,
-    extractXrayTrace: true
+    extractXrayTrace: true,
+    injectLastModifiedAt: true,
+    extractLastModifiedAt: true,
   };
 
   static fromClient(client: DynamoDBClient, options?: MhDynamoClientOptions) {
@@ -108,13 +110,21 @@ export class MhDynamoClient {
     if (options as BaseFetchOptions) {
       if ((options as BaseFetchOptions).extractXrayTrace === undefined) {
         (options as BaseFetchOptions).extractXrayTrace =
-          this.globalOptions.extractXrayTrace;
+            this.globalOptions.extractXrayTrace;
+      }
+      if ((options as BaseFetchOptions).extractLastModifiedAt === undefined) {
+        (options as BaseFetchOptions).extractLastModifiedAt =
+            this.globalOptions.extractLastModifiedAt;
       }
     }
     if (options as BaseSaveOptions) {
       if ((options as BaseSaveOptions).injectXrayTrace === undefined) {
         (options as BaseSaveOptions).injectXrayTrace =
-          this.globalOptions.injectXrayTrace;
+            this.globalOptions.injectXrayTrace;
+      }
+      if ((options as BaseSaveOptions).injectLastModifiedAt === undefined) {
+        (options as BaseSaveOptions).injectLastModifiedAt =
+            this.globalOptions.injectLastModifiedAt;
       }
     }
     return options;
