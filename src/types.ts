@@ -40,4 +40,4 @@ export interface MultiItemOptions {
 
 export type WithXrayTraceId<T> = T & { _xray_trace_id?: string };
 
-export type WithLastModified<T> = T & { _last_modified: Date };
+export type WithLastModified<T> = T & { _last_modified: string };

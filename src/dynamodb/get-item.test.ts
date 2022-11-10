@@ -26,7 +26,7 @@ describe('get-item', () => {
   it('should return item', async () => {
     dynamoDbDocumentMock
       .on(GetCommand)
-      .resolves({ Item: { Id: 5, _xray_trace_id: 'trace', _last_modified: new Date() } });
+      .resolves({ Item: { Id: 5, _xray_trace_id: 'trace', _last_modified: (new Date()).toISOString() } });
 
     const result = await client.getItem<DynamoItem>({
       tableName: 'table',
@@ -58,7 +58,7 @@ describe('get-item', () => {
   it('should not sanitize last modified at', async () => {
     dynamoDbDocumentMock
         .on(GetCommand)
-        .resolves({ Item: { Id: 5, _last_modified: new Date() } });
+        .resolves({ Item: { Id: 5, _last_modified: (new Date()).toISOString() } });
 
     const result = await client.getItem<DynamoItem>({
       tableName: 'table',
@@ -68,7 +68,7 @@ describe('get-item', () => {
 
     expect(result).toEqual({
       Id: 5,
-      _last_modified: new Date()
+      _last_modified: (new Date()).toISOString()
     });
   });
 

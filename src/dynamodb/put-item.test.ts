@@ -32,7 +32,7 @@ describe('put', () => {
     const options = {
       ConditionExpression: 'the condition'
     } as PutCommandInput;
-    const item = { Id: 'x', _last_modified: new Date() };
+    const item = { Id: 'x', _last_modified: (new Date()).toISOString() };
 
     const result = await client.putItem({
       tableName: table,
@@ -68,7 +68,7 @@ describe('put', () => {
         dynamoDbDocumentMock.commandCalls(PutCommand)[0].args[0].input;
     expect(appliedArguments.Item).toEqual({
       ...item,
-      _last_modified: new Date(),
+      _last_modified: (new Date()).toISOString(),
     });
     expect(result).toBe(true);
   });
@@ -92,7 +92,7 @@ describe('put', () => {
     expect(appliedArguments.Item).toEqual({
       ...item,
       _xray_trace_id: 'trace',
-      _last_modified: new Date(),
+      _last_modified: (new Date()).toISOString(),
     });
     expect(result).toBe(true);
   });
