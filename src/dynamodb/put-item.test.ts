@@ -32,7 +32,7 @@ describe('put', () => {
     const options = {
       ConditionExpression: 'the condition'
     } as PutCommandInput;
-    const item = { Id: 'x', _last_modified_at: new Date() };
+    const item = { Id: 'x', _last_modified: new Date() };
 
     const result = await client.putItem({
       tableName: table,
@@ -51,7 +51,7 @@ describe('put', () => {
     expect(result).toBe(true);
   });
 
-  it('should always enrich with _last_modified_at', async () => {
+  it('should always enrich with _last_modified', async () => {
     const table = 'table';
     const options = {
       ConditionExpression: 'the condition'
@@ -68,7 +68,7 @@ describe('put', () => {
         dynamoDbDocumentMock.commandCalls(PutCommand)[0].args[0].input;
     expect(appliedArguments.Item).toEqual({
       ...item,
-      _last_modified_at: new Date(),
+      _last_modified: new Date(),
     });
     expect(result).toBe(true);
   });
@@ -92,7 +92,7 @@ describe('put', () => {
     expect(appliedArguments.Item).toEqual({
       ...item,
       _xray_trace_id: 'trace',
-      _last_modified_at: new Date(),
+      _last_modified: new Date(),
     });
     expect(result).toBe(true);
   });
@@ -110,7 +110,7 @@ describe('put', () => {
       item,
       commandOptions: options,
       injectXrayTrace: false,
-      injectLastModifiedAt: false,
+      injectLastModified: false,
     });
 
     const appliedArguments =

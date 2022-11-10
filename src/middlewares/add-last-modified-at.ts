@@ -1,8 +1,8 @@
-import { WithLastModifiedAt } from "../types";
+import { WithLastModified } from "../types";
 
-export function addLastModifiedAt<T>(item: T): WithLastModifiedAt<T> {
+export function addLastModified<T>(item: T): WithLastModified<T> {
     return {
         ...item,
-        _last_modified_at: new Date()
+        _last_modified: new Date()
     };
 }

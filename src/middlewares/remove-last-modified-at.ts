@@ -1,8 +1,8 @@
-import { WithLastModifiedAt } from '../types';
+import { WithLastModified } from '../types';
 
-export function removeLastModifiedAt<T>(item: T): T {
-  if (!('_last_modified_at' in item)) return item;
+export function removeLastModified<T>(item: T): T {
+  if (!('_last_modified' in item)) return item;
 
-  const { _last_modified_at, ...restOfItem } = item as WithLastModifiedAt<T>;
+  const { _last_modified, ...restOfItem } = item as WithLastModified<T>;
   return restOfItem as T;
 }
