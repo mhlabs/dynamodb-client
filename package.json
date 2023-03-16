@@ -1,6 +1,6 @@
 {
   "name": "@mhlabs/dynamodb-client",
-  "version": "4.0.0-beta.1",
+  "version": "4.0.1-beta.1",
   "description": "A lib to simplify working with dynamodb document client in aws sdk v3.",
   "keywords": [
     "aws",
@@ -17,8 +17,17 @@
     "type": "git",
     "url": "git+https://github.com/mhlabs/dynamodb-client.git"
   },
+  "scripts": {
+    "test": "vitest ./src",
+    "integration:tests": "vitest ./integration-tests"
+  },
   "bugs": {
     "url": "https://github.com/mhlabs/dynamodb-client/issues"
   },
-  "homepage": "https://github.com/mhlabs/dynamodb-client#readme"
+  "homepage": "https://github.com/mhlabs/dynamodb-client#readme",
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.292.0",
+    "@aws-sdk/lib-dynamodb": "^3.292.0",
+    "vitest": "^0.29.3"
+  }
 }
