@@ -19,7 +19,7 @@
   },
   "scripts": {
     "test": "vitest ./src",
-    "integration-tests": "vitest ./integration-tests"
+    "integration:tests": "vitest ./integration-tests"
   },
   "bugs": {
     "url": "https://github.com/mhlabs/dynamodb-client/issues"
