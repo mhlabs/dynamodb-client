@@ -17,6 +17,7 @@ const dynamoClient = new DynamoDBClient({
     accessKeyId: "xxx",
     secretAccessKey: "yyy",
   },
+  region: "eu-west-1",
 });
 
 const tableParams = {

@@ -27,8 +27,8 @@ jobs:
         with:
           port: 8000
           cors: "*"
-      - run: npm test src
-      - run: npm test integration-tests
+      - run: npm test
+      - run: npm run integration:tests
 
   publish-npm:
     needs: build
