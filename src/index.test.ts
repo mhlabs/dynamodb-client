@@ -1,4 +1,5 @@
 import {
+  DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
@@ -41,7 +42,7 @@ describe('test client', () => {
 
     const mhDynamoDbClient = new MhDynamoDbClient({});
     const mock = mockClient(DynamoDBClient);
-    mock.on(PutItemCommand).resolves(mockResponse);
+    mock.on(DeleteItemCommand).resolves(mockResponse);
 
     const params = { TableName: 'TestTable', Key: { id: { S: '123' } } };
     const result = await mhDynamoDbClient.deleteItem(params);
