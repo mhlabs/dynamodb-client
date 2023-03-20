@@ -1,4 +1,8 @@
 import {
+  BatchGetItemCommand,
+  BatchGetItemCommandInput,
+  BatchWriteItemCommand,
+  BatchWriteItemCommandInput,
   DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
@@ -46,6 +50,54 @@ describe('test client', () => {
 
     const params = { TableName: 'TestTable', Key: { id: { S: '123' } } };
     const result = await mhDynamoDbClient.deleteItem(params);
+
+    expect(result).toEqual(mockResponse);
+  });
+
+  it('should call batch write and return the response', async () => {
+    const mockResponse = {};
+
+    const mhDynamoDbClient = new MhDynamoDbClient({});
+    const mock = mockClient(DynamoDBClient);
+    mock.on(BatchWriteItemCommand).resolves(mockResponse);
+
+    const params: BatchWriteItemCommandInput = {
+      RequestItems: {
+        sampleTable: [
+          {
+            PutRequest: {
+              Item: {
+                id: { S: '123' },
+              },
+            },
+          },
+        ],
+      },
+    };
+    const result = await mhDynamoDbClient.batchWriteItem(params);
+
+    expect(result).toEqual(mockResponse);
+  });
+
+  it('should call batch get and return the result', async () => {
+    const mockResponse = {};
+
+    const mhDynamoDbClient = new MhDynamoDbClient({});
+    const mock = mockClient(DynamoDBClient);
+    mock.on(BatchGetItemCommand).resolves(mockResponse);
+
+    const params: BatchGetItemCommandInput = {
+      RequestItems: {
+        sampleTable: {
+          Keys: [
+            {
+              one: { S: '123' },
+            },
+          ],
+        },
+      },
+    };
+    const result = await mhDynamoDbClient.batchGetItem(params);
 
     expect(result).toEqual(mockResponse);
   });

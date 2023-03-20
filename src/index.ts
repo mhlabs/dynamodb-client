@@ -1,4 +1,9 @@
+import { Tracer } from '@aws-lambda-powertools/tracer';
 import {
+  BatchGetItemCommand,
+  BatchGetItemCommandInput,
+  BatchWriteItemCommand,
+  BatchWriteItemCommandInput,
   DeleteItemCommand,
   DeleteItemCommandInput,
   DynamoDBClient,
@@ -28,6 +33,16 @@ export class MhDynamoDbClient {
 
   async deleteItem<T>(args: DeleteItemCommandInput): Promise<any> {
     const response = await this.client.send(new DeleteItemCommand(args));
+    return response;
+  }
+
+  async batchWriteItem<T>(args: BatchWriteItemCommandInput): Promise<any> {
+    const response = await this.client.send(new BatchWriteItemCommand(args));
+    return response;
+  }
+
+  async batchGetItem<T>(args: BatchGetItemCommandInput): Promise<any> {
+    const response = await this.client.send(new BatchGetItemCommand(args));
     return response;
   }
 }
