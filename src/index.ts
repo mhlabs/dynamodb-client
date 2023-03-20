@@ -18,7 +18,8 @@ export class MhDynamoDbClient {
   private readonly client: DynamoDBClient;
 
   constructor(config: DynamoDBClientConfig) {
-    this.client = new DynamoDBClient(config);
+    const tracer = new Tracer();
+    this.client = tracer.captureAWSv3Client(new DynamoDBClient(config));
   }
 
   async getItem<T>(args: GetItemCommandInput): Promise<T> {
