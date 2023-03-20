@@ -2,15 +2,19 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   BatchGetCommand,
   BatchGetCommandInput,
+  BatchGetCommandOutput,
   BatchWriteCommand,
   BatchWriteCommandInput,
+  BatchWriteCommandOutput,
   DeleteCommand,
   DeleteCommandInput,
+  DeleteCommandOutput,
   DynamoDBDocumentClient,
   GetCommand,
   GetCommandInput,
   PutCommand,
   PutCommandInput,
+  PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 
 export class MhDynamoDbClient {
@@ -26,22 +30,26 @@ export class MhDynamoDbClient {
     return response.Item as T;
   }
 
-  async putItem<T>(args: PutCommandInput): Promise<any> {
+  async putItem(args: PutCommandInput): Promise<PutCommandOutput> {
     const response = await this.client.send(new PutCommand(args));
     return response;
   }
 
-  async deleteItem<T>(args: DeleteCommandInput): Promise<any> {
+  async deleteItem(args: DeleteCommandInput): Promise<DeleteCommandOutput> {
     const response = await this.client.send(new DeleteCommand(args));
     return response;
   }
 
-  async batchWriteItem<T>(args: BatchWriteCommandInput): Promise<any> {
+  async batchWriteItem(
+    args: BatchWriteCommandInput
+  ): Promise<BatchWriteCommandOutput> {
     const response = await this.client.send(new BatchWriteCommand(args));
     return response;
   }
 
-  async batchGetItem<T>(args: BatchGetCommandInput): Promise<any> {
+  async batchGetItem(
+    args: BatchGetCommandInput
+  ): Promise<BatchGetCommandOutput> {
     const response = await this.client.send(new BatchGetCommand(args));
     return response;
   }
