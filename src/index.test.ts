@@ -1,13 +1,13 @@
 import {
-  BatchGetItemCommand,
-  BatchGetItemCommandInput,
-  BatchWriteItemCommand,
-  BatchWriteItemCommandInput,
-  DeleteItemCommand,
-  DynamoDBClient,
-  GetItemCommand,
-  PutItemCommand,
-} from '@aws-sdk/client-dynamodb';
+  BatchGetCommand,
+  BatchGetCommandInput,
+  BatchWriteCommand,
+  BatchWriteCommandInput,
+  DeleteCommand,
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { describe, expect, it } from 'vitest';
 import { MhDynamoDbClient } from '.';
@@ -15,14 +15,14 @@ import { MhDynamoDbClient } from '.';
 describe('test client', () => {
   it('should call getItem and return the result', async () => {
     const mockResponse = {
-      Item: { id: { S: '123' }, name: { S: 'Test Item' } },
+      Item: { id: '123', name: 'Test Item' },
     };
 
-    const mhDynamoDbClient = new MhDynamoDbClient({});
-    const mock = mockClient(DynamoDBClient);
-    mock.on(GetItemCommand).resolves(mockResponse);
+    const mhDynamoDbClient = new MhDynamoDbClient();
+    const mock = mockClient(DynamoDBDocumentClient);
+    mock.on(GetCommand).resolves(mockResponse);
 
-    const params = { TableName: 'TestTable', Key: { id: { S: '123' } } };
+    const params = { TableName: 'TestTable', Key: { id: '123' } };
     const result = await mhDynamoDbClient.getItem(params);
 
     expect(result).toEqual(mockResponse.Item);
@@ -31,11 +31,14 @@ describe('test client', () => {
   it('should call putItem and return the response', async () => {
     const mockResponse = {};
 
-    const mhDynamoDbClient = new MhDynamoDbClient({});
-    const mock = mockClient(DynamoDBClient);
-    mock.on(PutItemCommand).resolves(mockResponse);
+    const mhDynamoDbClient = new MhDynamoDbClient();
+    const mock = mockClient(DynamoDBDocumentClient);
+    mock.on(PutCommand).resolves(mockResponse);
 
-    const params = { TableName: 'TestTable', Item: { id: { S: '123' } } };
+    const params = {
+      TableName: 'TestTable',
+      Item: { id: '123', name: 'Test Item' },
+    };
     const result = await mhDynamoDbClient.putItem(params);
 
     expect(result).toEqual(mockResponse);
@@ -44,11 +47,11 @@ describe('test client', () => {
   it('should call deleteItem and return the response', async () => {
     const mockResponse = {};
 
-    const mhDynamoDbClient = new MhDynamoDbClient({});
-    const mock = mockClient(DynamoDBClient);
-    mock.on(DeleteItemCommand).resolves(mockResponse);
+    const mhDynamoDbClient = new MhDynamoDbClient();
+    const mock = mockClient(DynamoDBDocumentClient);
+    mock.on(DeleteCommand).resolves(mockResponse);
 
-    const params = { TableName: 'TestTable', Key: { id: { S: '123' } } };
+    const params = { TableName: 'TestTable', Key: { id: { id: '123' } } };
     const result = await mhDynamoDbClient.deleteItem(params);
 
     expect(result).toEqual(mockResponse);
@@ -57,18 +60,16 @@ describe('test client', () => {
   it('should call batch write and return the response', async () => {
     const mockResponse = {};
 
-    const mhDynamoDbClient = new MhDynamoDbClient({});
-    const mock = mockClient(DynamoDBClient);
-    mock.on(BatchWriteItemCommand).resolves(mockResponse);
+    const mhDynamoDbClient = new MhDynamoDbClient();
+    const mock = mockClient(DynamoDBDocumentClient);
+    mock.on(BatchWriteCommand).resolves(mockResponse);
 
-    const params: BatchWriteItemCommandInput = {
+    const params: BatchWriteCommandInput = {
       RequestItems: {
         sampleTable: [
           {
             PutRequest: {
-              Item: {
-                id: { S: '123' },
-              },
+              Item: { id: '123', name: 'Test Item' },
             },
           },
         ],
@@ -82,16 +83,16 @@ describe('test client', () => {
   it('should call batch get and return the result', async () => {
     const mockResponse = {};
 
-    const mhDynamoDbClient = new MhDynamoDbClient({});
-    const mock = mockClient(DynamoDBClient);
-    mock.on(BatchGetItemCommand).resolves(mockResponse);
+    const mhDynamoDbClient = new MhDynamoDbClient();
+    const mock = mockClient(DynamoDBDocumentClient);
+    mock.on(BatchGetCommand).resolves(mockResponse);
 
-    const params: BatchGetItemCommandInput = {
+    const params: BatchGetCommandInput = {
       RequestItems: {
         sampleTable: {
           Keys: [
             {
-              one: { S: '123' },
+              id: '123',
             },
           ],
         },

@@ -1,49 +1,48 @@
-import { Tracer } from '@aws-lambda-powertools/tracer';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
-  BatchGetItemCommand,
-  BatchGetItemCommandInput,
-  BatchWriteItemCommand,
-  BatchWriteItemCommandInput,
-  DeleteItemCommand,
-  DeleteItemCommandInput,
-  DynamoDBClient,
-  DynamoDBClientConfig,
-  GetItemCommand,
-  GetItemCommandInput,
-  PutItemCommand,
-  PutItemCommandInput,
-} from '@aws-sdk/client-dynamodb';
+  BatchGetCommand,
+  BatchGetCommandInput,
+  BatchWriteCommand,
+  BatchWriteCommandInput,
+  DeleteCommand,
+  DeleteCommandInput,
+  DynamoDBDocumentClient,
+  GetCommand,
+  GetCommandInput,
+  PutCommand,
+  PutCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 
 export class MhDynamoDbClient {
-  private readonly client: DynamoDBClient;
+  private readonly client: DynamoDBDocumentClient;
 
-  constructor(config: DynamoDBClientConfig) {
-    const tracer = new Tracer();
-    this.client = tracer.captureAWSv3Client(new DynamoDBClient(config));
+  constructor(client?: DynamoDBClient) {
+    client = client ?? new DynamoDBClient({});
+    this.client = DynamoDBDocumentClient.from(client);
   }
 
-  async getItem<T>(args: GetItemCommandInput): Promise<T> {
-    const response = await this.client.send(new GetItemCommand(args));
+  async getItem<T>(args: GetCommandInput): Promise<T> {
+    const response = await this.client.send(new GetCommand(args));
     return response.Item as T;
   }
 
-  async putItem<T>(args: PutItemCommandInput): Promise<any> {
-    const response = await this.client.send(new PutItemCommand(args));
+  async putItem<T>(args: PutCommandInput): Promise<any> {
+    const response = await this.client.send(new PutCommand(args));
     return response;
   }
 
-  async deleteItem<T>(args: DeleteItemCommandInput): Promise<any> {
-    const response = await this.client.send(new DeleteItemCommand(args));
+  async deleteItem<T>(args: DeleteCommandInput): Promise<any> {
+    const response = await this.client.send(new DeleteCommand(args));
     return response;
   }
 
-  async batchWriteItem<T>(args: BatchWriteItemCommandInput): Promise<any> {
-    const response = await this.client.send(new BatchWriteItemCommand(args));
+  async batchWriteItem<T>(args: BatchWriteCommandInput): Promise<any> {
+    const response = await this.client.send(new BatchWriteCommand(args));
     return response;
   }
 
-  async batchGetItem<T>(args: BatchGetItemCommandInput): Promise<any> {
-    const response = await this.client.send(new BatchGetItemCommand(args));
+  async batchGetItem<T>(args: BatchGetCommandInput): Promise<any> {
+    const response = await this.client.send(new BatchGetCommand(args));
     return response;
   }
 }
