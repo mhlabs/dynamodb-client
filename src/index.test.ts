@@ -28,14 +28,6 @@ describe('test client', () => {
 
       expect(mockedFunction).toHaveBeenCalled();
     });
-
-    it('should not call awsClientCapture if options.awsClientCapture is not provided', () => {
-      const mockedFunction = vi.fn((x) => x);
-
-      const instance = new MhDynamoDbClient({});
-
-      expect(mockedFunction).not.toHaveBeenCalled();
-    });
   });
 
   it('should call getItem and return the result', async () => {
@@ -43,11 +35,10 @@ describe('test client', () => {
       Item: { id: '123', name: 'Test Item' },
       $metadata: {},
     };
-
-    const mhDynamoDbClient = new MhDynamoDbClient();
     const mock = mockClient(DynamoDBDocumentClient);
     mock.on(GetCommand).resolves(mockResponse);
 
+    const mhDynamoDbClient = new MhDynamoDbClient();
     const params = { TableName: 'TestTable', Key: { id: '123' } };
     const result = await mhDynamoDbClient.getItem(params);
 
@@ -60,10 +51,10 @@ describe('test client', () => {
       $metadata: {},
     };
 
-    const mhDynamoDbClient = new MhDynamoDbClient();
     const mock = mockClient(DynamoDBDocumentClient);
     mock.on(PutCommand).resolves(mockResponse);
 
+    const mhDynamoDbClient = new MhDynamoDbClient();
     const params = {
       TableName: 'TestTable',
       Item: { id: '123', name: 'Test Item' },
@@ -79,10 +70,10 @@ describe('test client', () => {
       $metadata: {},
     };
 
-    const mhDynamoDbClient = new MhDynamoDbClient();
     const mock = mockClient(DynamoDBDocumentClient);
     mock.on(DeleteCommand).resolves(mockResponse);
 
+    const mhDynamoDbClient = new MhDynamoDbClient();
     const params = { TableName: 'TestTable', Key: { id: { id: '123' } } };
     const result = await mhDynamoDbClient.deleteItem(params);
 
@@ -95,10 +86,10 @@ describe('test client', () => {
       $metadata: {},
     };
 
-    const mhDynamoDbClient = new MhDynamoDbClient();
     const mock = mockClient(DynamoDBDocumentClient);
     mock.on(BatchWriteCommand).resolves(mockResponse);
 
+    const mhDynamoDbClient = new MhDynamoDbClient();
     const params: BatchWriteCommandInput = {
       RequestItems: {
         sampleTable: [
@@ -128,10 +119,10 @@ describe('test client', () => {
       $metadata: {},
     };
 
-    const mhDynamoDbClient = new MhDynamoDbClient();
     const mock = mockClient(DynamoDBDocumentClient);
     mock.on(BatchGetCommand).resolves(mockResponse);
 
+    const mhDynamoDbClient = new MhDynamoDbClient();
     const params: BatchGetCommandInput = {
       RequestItems: {
         sampleTable: {
