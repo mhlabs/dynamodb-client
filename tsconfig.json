@@ -1,0 +1,10 @@
+{
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "compilerOptions": {
+    "preserveConstEnums": true,
+    "noEmit": true,
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "types": ["vitest/globals"]
+  }
+}

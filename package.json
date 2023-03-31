@@ -19,7 +19,8 @@
   },
   "scripts": {
     "test": "vitest ./src",
-    "integration:tests": "vitest ./integration-tests"
+    "integration:tests": "vitest ./integration-tests",
+    "test:coverage": "vitest run --coverage"
   },
   "bugs": {
     "url": "https://github.com/mhlabs/dynamodb-client/issues"
@@ -28,10 +29,10 @@
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.292.0",
     "@aws-sdk/lib-dynamodb": "^3.292.0",
+    "@tsconfig/node18": "latest",
     "aws-sdk-client-mock": "^2.1.1",
-    "vitest": "^0.29.3"
+    "vitest": "^0.29.8",
+    "@vitest/coverage-c8": "^0.29.8"
   },
-  "dependencies": {
-    "@aws-lambda-powertools/tracer": "^1.6.0"
-  }
+  "dependencies": {}
 }
