@@ -66,5 +66,3 @@ export class MhDynamoDbClient {
     return response;
   }
 }
-
-new MhDynamoDbClient();
