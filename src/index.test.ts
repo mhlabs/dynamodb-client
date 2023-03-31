@@ -14,10 +14,30 @@ import {
   PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
-import { describe, expect, it } from 'vitest';
 import { MhDynamoDbClient } from '.';
 
 describe('test client', () => {
+  describe('constructor', () => {
+    it('should call awsClientCapture with a new instance of DynamoDb if options.awsClientCapture is provided', () => {
+      const mockedFunction = vi.fn((x) => x);
+
+      const instance = new MhDynamoDbClient(
+        { awsClientCapture: mockedFunction },
+        {}
+      );
+
+      expect(mockedFunction).toHaveBeenCalled();
+    });
+
+    it('should not call awsClientCapture if options.awsClientCapture is not provided', () => {
+      const mockedFunction = vi.fn((x) => x);
+
+      const instance = new MhDynamoDbClient({});
+
+      expect(mockedFunction).not.toHaveBeenCalled();
+    });
+  });
+
   it('should call getItem and return the result', async () => {
     const mockResponse: GetCommandOutput = {
       Item: { id: '123', name: 'Test Item' },
