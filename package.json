@@ -1,6 +1,6 @@
 {
   "name": "@mhlabs/dynamodb-client",
-  "version": "4.0.1-beta.1",
+  "version": "4.0.1-beta.2",
   "description": "A lib to simplify working with dynamodb document client in aws sdk v3.",
   "keywords": [
     "aws",
