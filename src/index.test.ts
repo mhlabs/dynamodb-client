@@ -30,6 +30,49 @@ describe('test client', () => {
     });
   });
 
+  describe('options', () => {
+    it('should use default options', () => {
+      const mhDynamoDbClient = new MhDynamoDbClient();
+      const options = mhDynamoDbClient.getOptions();
+
+      expect(options?.fetchOptions?.removeXrayTraceId).toEqual(true);
+    });
+
+    it('should overwrite removeXrayTraceId', () => {
+      const mhDynamoDbClient = new MhDynamoDbClient({
+        fetchOptions: { removeXrayTraceId: false },
+      });
+      const options = mhDynamoDbClient.getOptions();
+
+      expect(options?.fetchOptions?.removeXrayTraceId).toEqual(false);
+    });
+
+    it('should add awsClientCapture', () => {
+      const mockedFunction = vi.fn((x) => x);
+
+      const mhDynamoDbClient = new MhDynamoDbClient({
+        awsClientCapture: mockedFunction,
+      });
+      const options = mhDynamoDbClient.getOptions();
+
+      expect(options?.fetchOptions?.removeXrayTraceId).toEqual(true);
+      expect(options?.awsClientCapture).toEqual(mockedFunction);
+    });
+
+    it('should add awsClientCapture and removeXrayTraceId', () => {
+      const mockedFunction = vi.fn((x) => x);
+
+      const mhDynamoDbClient = new MhDynamoDbClient({
+        awsClientCapture: mockedFunction,
+        fetchOptions: { removeXrayTraceId: false },
+      });
+      const options = mhDynamoDbClient.getOptions();
+
+      expect(options?.fetchOptions?.removeXrayTraceId).toEqual(false);
+      expect(options?.awsClientCapture).toEqual(mockedFunction);
+    });
+  });
+
   it('should call getItem and return the result', async () => {
     const mockResponse: GetCommandOutput = {
       Item: { id: '123', name: 'Test Item' },
