@@ -1,3 +1,9 @@
+import {
+  GetCommandInput,
+  GetCommandOutput,
+  PutCommandInput,
+  PutCommandOutput,
+} from '@aws-sdk/lib-dynamodb';
 import { MhDynamoMiddlewareAfter, MhDynamoMiddlewareBefore } from './types';
 
 export class MhDynamoMiddleware {
@@ -20,13 +26,27 @@ export class MhDynamoMiddleware {
     return this;
   }
 
-  protected runAfterMiddlewares<T>(item: T): T {
-    if (!item) return item;
+  protected runAfterMiddlewares<T extends GetCommandOutput | PutCommandOutput>(
+    commandOutput: T
+  ): T {
+    if (!commandOutput) return commandOutput;
 
     this.middlewares.after.forEach((middleware) => {
-      item = middleware.runAfter(item);
+      commandOutput = middleware.runAfter(commandOutput);
     });
 
-    return item;
+    return commandOutput;
+  }
+
+  protected runBeforeMiddlewares<T extends GetCommandInput | PutCommandInput>(
+    commandInput: T
+  ): T {
+    if (!commandInput) return commandInput;
+
+    this.middlewares.before.forEach((middleware) => {
+      commandInput = middleware.runBefore(commandInput);
+    });
+
+    return commandInput;
   }
 }

@@ -17,6 +17,7 @@ import {
   PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { MhDynamoMiddleware } from './middleware';
+import { MhGetCommandOutput } from './types';
 
 interface Options {
   /** @type captureAwsv3Client function type */
@@ -39,9 +40,20 @@ export class MhDynamoDbClient extends MhDynamoMiddleware {
     this.client = DynamoDBDocumentClient.from(dynamoDb);
   }
 
-  async getItem<T>(args: GetCommandInput): Promise<T> {
-    const response = await this.client.send(new GetCommand(args));
-    return this.runAfterMiddlewares(response.Item as T);
+  async getItem<T>(args: GetCommandInput): Promise<MhGetCommandOutput<T>> {
+    const transformedInput = this.runBeforeMiddlewares(args);
+
+    const commandOutput = await this.client.send(
+      new GetCommand(transformedInput)
+    );
+
+    const transformedOutput = this.runAfterMiddlewares(commandOutput);
+    const { Item, ...outputWithoutItem } = transformedOutput;
+
+    return {
+      ...outputWithoutItem,
+      Item: Item as T,
+    } as MhGetCommandOutput<T>;
   }
 
   async putItem(args: PutCommandInput): Promise<PutCommandOutput> {
